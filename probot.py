@@ -10,6 +10,13 @@ load_dotenv()
 DATABASE_TOKEN = os.getenv('DATABASE_TOKEN')
 BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
 
+# Set up the bot with the proper intents to read message content and reactions
+intents = discord.Intents.default()
+intents.message_content = True
+intents.reactions = True
+intents.members = True
+bot = commands.Bot(command_prefix="!", intents=intents)
+
 class MyView(discord.ui.View):  # Create a class called MyView that subclasses discord.ui.View
     @discord.ui.button(label="Artist", style=discord.ButtonStyle.primary)  # Create a button with the label "Artist" with color Blurple
     async def artist_button_callback(self, button, interaction):
