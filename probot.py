@@ -27,14 +27,13 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f"We have logged in as {bot.user}")
     guild = discord.utils.get(bot.guilds, id=guild_id)
     channel = discord.utils.get(guild.channels, id=channel_id)
     await channel.send(
         "Choose your role:",
         components=[
             [
-                Button(style=ButtonStyle.green, label=name)
+                Button(style=discord.ButtonStyle.green, label=name)
                 for name in roles.keys()
             ]
         ]
