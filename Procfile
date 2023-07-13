@@ -1,1 +1,1 @@
-worker1: python3 skybot.py
+worker1: python3 probot.py
