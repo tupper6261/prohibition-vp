@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 import asyncio
 from datetime import datetime
+import pytz
 
 load_dotenv()
 
@@ -58,7 +59,7 @@ async def on_ready():
     role = discord.utils.get(guild.roles, id=1129131947625562183)
 
     # Define the cutoff date
-    cutoff = datetime(2023, 7, 11)  # Replace with the correct year
+    cutoff = datetime(2023, 7, 11, tzinfo=pytz.UTC)  # Replace with the correct year
 
     # Iterate over the members of the guild
     for member in guild.members:
