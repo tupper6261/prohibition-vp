@@ -4,8 +4,6 @@ from discord.ui import Button, View, Select
 import os
 from dotenv import load_dotenv
 import asyncio
-from datetime import datetime
-import pytz
 
 load_dotenv()
 
@@ -54,19 +52,5 @@ async def on_ready():
     message_id = 1129129885928005874
     message = await channel.fetch_message(message_id)
     await message.edit(content="Tap the below buttons to add/remove the corresponding role:", view=MyView())
-
-    # Get the role to assign
-    role = discord.utils.get(guild.roles, id=1129131947625562183)
-
-    # Define the cutoff date
-    cutoff = datetime(2023, 7, 11, tzinfo=pytz.UTC)  # Replace with the correct year
-
-    # Iterate over the members of the guild
-    for member in guild.members:
-        # If the member joined before the cutoff date, add the role
-        if member.joined_at < cutoff:
-            await member.add_roles(role)
-
-    print("Role assignment complete")
 
 bot.run(BOT_TOKEN)
