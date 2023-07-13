@@ -18,6 +18,9 @@ intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 class MyView(discord.ui.View):  # Create a class called MyView that subclasses discord.ui.View
+    def __init__(self):
+        super().__init__(timeout=None)  # timeout of the view must be set to None
+        
     @discord.ui.button(label="Artist", style=discord.ButtonStyle.primary)  # Create a button with the label "Artist" with color Blurple
     async def artist_button_callback(self, button, interaction):
         role = discord.utils.get(interaction.guild.roles, id=1107785958746771538)
