@@ -39,7 +39,6 @@ cssselect==1.2.0
 cymem==2.0.7
 Cython==0.29.28
 cytoolz==0.11.2
-discord.py==1.7.3
 distlib==0.3.6
 distro==1.8.0
 Django==4.1.1
