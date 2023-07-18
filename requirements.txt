@@ -77,5 +77,5 @@ urllib3==1.26.8
 varint==1.0.2
 web3==5.29.1
 webdriver-manager==3.5.2
-websockets==9.1
+websockets==11.0.3
 wsproto==1.0.0
