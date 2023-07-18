@@ -12,10 +12,10 @@ import json
 
 load_dotenv()
 
-DATABASE_TOKEN = 'postgres://yezaufigplmbrj:daa40d1942c2a9bc98258d57d3c6835b989d25aae748cfb199526dca7da06a66@ec2-34-228-248-175.compute-1.amazonaws.com:5432/db6a6eqkldihes' #os.getenv('DATABASE_TOKEN')
-BOT_TOKEN = 'MTEyODcxNTMwOTM1Mjc1OTM0Nw.G5joCg.UhUbG7rW-R3Akwzr4df-YjiuUcxgeq63nbBecY' #os.getenv('DISCORD_BOT_TOKEN')
-ALCHEMY_API_KEY = 'A1iH19r0eHoN-M8TubwLZ1iS-F47WG-G' #os.getenv('ALCHEMY_API_KEY')
-RESERVOIR_API_KEY = '7772cfc3-8666-55e6-ad93-dc665138f1ac' #os.getenv('RESERVOIR_API_KEY')
+DATABASE_TOKEN = os.getenv('DATABASE_TOKEN')
+BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
+ALCHEMY_API_KEY = os.getenv('ALCHEMY_API_KEY')
+RESERVOIR_API_KEY = os.getenv('RESERVOIR_API_KEY')
 prohibitionContract = "0x47A91457a3a1f700097199Fd63c039c4784384aB"
 
 # Set up web3
