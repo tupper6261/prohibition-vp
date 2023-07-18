@@ -126,7 +126,7 @@ async def track():
         try:
             token_name = data['transfers'][0]['token']['name']
         except:
-            print (data)
+            continue
         else:
             print (token_name)
         timestamp = data['transfers'][0]['timestamp']
