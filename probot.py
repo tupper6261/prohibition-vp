@@ -123,7 +123,12 @@ async def track():
         response = requests.get(url, headers=headers)
         data = json.loads(response.text)
 
-        token_name = data['transfers'][0]['token']['name']
+        try:
+            token_name = data['transfers'][0]['token']['name']
+        except:
+            print (data)
+        else:
+            print (token_name)
         timestamp = data['transfers'][0]['timestamp']
         image_url = data['transfers'][0]['token']['image']
         token_id = data['transfers'][0]['token']['tokenId']
