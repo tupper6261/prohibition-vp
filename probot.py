@@ -128,7 +128,7 @@ async def track():
         image_url = data['transfers'][0]['token']['image']
         token_id = data['transfers'][0]['token']['tokenId']
 
-        embed = discord.Embed(title=token_name, description=f"[{token_name}] was minted at <t:{timestamp}:f>.\n\nhttps://prohibition.art/token/{token_id}")
+        embed = discord.Embed(title=token_name, description=f"{token_name} was minted at <t:{timestamp}:f>.\n\nhttps://prohibition.art/token/{token_id}")
         embed.set_image(url=image_url)
         await mint_channel.send(embed=embed)
         await asyncio.sleep(1)
