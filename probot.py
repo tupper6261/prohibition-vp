@@ -94,8 +94,9 @@ async def track():
         #contract deploy block = 105291124
 
         from_block = int(from_block)
+        print ("From block:" + str(from_block))
         current_block = w3.eth.block_number
-
+        print ("Current block:" + str(current_block))
 
         # Filter for Mint events
         mint_events = []
