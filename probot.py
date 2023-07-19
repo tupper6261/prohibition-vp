@@ -75,78 +75,79 @@ async def on_ready():
         await asyncio.sleep(60)
 
 async def track():
-    guild = discord.utils.get(bot.guilds, id=1101580614945222708)
-    mint_channel = discord.utils.get(guild.channels, id=1126976550508712106)
-    sales_channel = discord.utils.get(guild.channels, id=1126976977199435786)
+    try:
+        guild = discord.utils.get(bot.guilds, id=1101580614945222708)
+        mint_channel = discord.utils.get(guild.channels, id=1126976550508712106)
+        sales_channel = discord.utils.get(guild.channels, id=1126976977199435786)
 
-    conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
-    cur = conn.cursor()
-    command = "select * from globalvariables where name = 'prohibition_latest_mint_block'"
-    cur.execute(command)
-    results = cur.fetchall()
-    from_block = results[0][1]
-    cur.close()
-    conn.commit()
-    conn.close()
-    
+        conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
+        cur = conn.cursor()
+        command = "select * from globalvariables where name = 'prohibition_latest_mint_block'"
+        cur.execute(command)
+        results = cur.fetchall()
+        from_block = results[0][1]
+        cur.close()
+        conn.commit()
+        conn.close()
+        
 
-    #contract deploy block = 105291124
+        #contract deploy block = 105291124
 
-    from_block = int(from_block)
-    current_block = w3.eth.block_number
+        from_block = int(from_block)
+        current_block = w3.eth.block_number
 
 
-    # Filter for Mint events
-    mint_events = []
-    event_filter = {
-        "address": contract_address,
-        "fromBlock": from_block,
-        "toBlock": current_block
-    }
-    
-    events = w3.eth.get_logs(event_filter)
-    for event in events:
-        topic_hex = event['topics'][0].hex()
-        #This is a mint event
-        if topic_hex == '0x0f6798a560793a54c3bcfe86a93cde1e73087d944c0ea20544137d4121396885':
-            mint_events.append(event)
-
-    for event in mint_events:
-        transaction_hash = event['transactionHash'].hex()
-        url = "https://api-arbitrum.reservoir.tools/transfers/v3?txHash=" + transaction_hash
-
-        headers = {
-            "accept": "*/*",
-            "x-api-key": RESERVOIR_API_KEY
+        # Filter for Mint events
+        mint_events = []
+        event_filter = {
+            "address": contract_address,
+            "fromBlock": from_block,
+            "toBlock": current_block
         }
+        
+        events = w3.eth.get_logs(event_filter)
+        for event in events:
+            topic_hex = event['topics'][0].hex()
+            #This is a mint event
+            if topic_hex == '0x0f6798a560793a54c3bcfe86a93cde1e73087d944c0ea20544137d4121396885':
+                mint_events.append(event)
 
-        response = requests.get(url, headers=headers)
-        data = json.loads(response.text)
+        for event in mint_events:
+            transaction_hash = event['transactionHash'].hex()
+            url = "https://api-arbitrum.reservoir.tools/transfers/v3?txHash=" + transaction_hash
 
-        try:
-            token_name = data['transfers'][0]['token']['name']
-        except:
-            continue
-        else:
-            print (token_name)
-        timestamp = data['transfers'][0]['timestamp']
-        image_url = data['transfers'][0]['token']['image']
-        token_id = data['transfers'][0]['token']['tokenId']
+            headers = {
+                "accept": "*/*",
+                "x-api-key": RESERVOIR_API_KEY
+            }
 
-        embed = discord.Embed(title=token_name, description=f"{token_name} was minted at <t:{timestamp}:f>.\n\nhttps://prohibition.art/token/{token_id}")
-        embed.set_image(url=image_url)
-        await mint_channel.send(embed=embed)
-        await asyncio.sleep(1)
+            response = requests.get(url, headers=headers)
+            data = json.loads(response.text)
 
-    conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
-    cur = conn.cursor()
-    command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_mint_block'".format(str(current_block))
-    cur.execute(command)
-    cur.close()
-    conn.commit()
-    conn.close()
+            try:
+                token_name = data['transfers'][0]['token']['name']
+            except:
+                continue
+            else:
+                print (token_name)
+            timestamp = data['transfers'][0]['timestamp']
+            image_url = data['transfers'][0]['token']['image']
+            token_id = data['transfers'][0]['token']['tokenId']
 
-    
-    
+            embed = discord.Embed(title=token_name, description=f"{token_name} was minted at <t:{timestamp}:f>.\n\nhttps://prohibition.art/token/{token_id}")
+            embed.set_image(url=image_url)
+            await mint_channel.send(embed=embed)
+            await asyncio.sleep(1)
+
+        conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
+        cur = conn.cursor()
+        command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_mint_block'".format(str(current_block))
+        cur.execute(command)
+        cur.close()
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        await asyncio.sleep(60)
 
 bot.run(BOT_TOKEN)
