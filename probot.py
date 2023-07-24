@@ -9,6 +9,7 @@ from datetime import datetime
 import requests
 import psycopg2
 import json
+import time
 
 load_dotenv()
 
@@ -157,8 +158,15 @@ async def track():
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(mints):
             token_name = i['token']['name']
+            print (token_name)
             timestamp = i['timestamp']
+            #We want to make sure we've waited at least 5 minutes since the mint so that the image has had time to render
+            current_timestamp = int(time.time())
+            difference = current_timestamp - int(timestamp)
+            if difference < 300:
+                await asyncio.sleep(300 - difference)
             image_url = i['token']['image']
+            print (image_url)
             token_id = i['token']['tokenId']
             latest_mint_hash = i['txHash']
             embed = discord.Embed(title=token_name, description=f"{token_name} was minted at <t:{timestamp}:f>.\n\nhttps://prohibition.art/token/{token_id}")
