@@ -71,6 +71,7 @@ async def track():
         guild = discord.utils.get(bot.guilds, id=1101580614945222708)
         mint_channel = discord.utils.get(guild.channels, id=1126976550508712106)
         sales_channel = discord.utils.get(guild.channels, id=1126976977199435786)
+        listings_channel = discord.utils.get(guild.channels, id=1126977037765189752)
 
         #Get the last events we already posted
         conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
@@ -247,7 +248,7 @@ async def track():
             image_url = data['tokens'][0]['token']['image']
             embed = discord.Embed(title=token_name, description=f"{token_name} received a {offer_price} {offer_symbol} offer at <t:{timestamp}:f>.\n\nhttps://prohibition.art/token/{token_id}")
             embed.set_image(url=image_url)
-            await sales_channel.send(embed=embed)
+            await listings_channel.send(embed=embed)
             command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_offer_id'".format(latest_offer_id)
             cur.execute(command)
             conn.commit()
