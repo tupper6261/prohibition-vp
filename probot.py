@@ -88,6 +88,10 @@ async def track():
         cur.execute(command)
         results = cur.fetchall()
         latest_offer_id = results[0][1]
+        command = "select * from globalvariables where name = 'prohibition_latest_listing_id'"
+        cur.execute(command)
+        results = cur.fetchall()
+        latest_listing_id = results[0][1]
         cur.close()
         conn.commit()
         conn.close()
@@ -95,6 +99,7 @@ async def track():
         mints = []
         sales = []
         offers = []
+        listings = []
 
         headers = {
             "accept": "*/*",
@@ -187,6 +192,36 @@ async def track():
             await asyncio.sleep(1)
             #We'll pause for a second so we don't get rate limited
 
+        exit_flag = False
+        continuation = ''
+
+        #'Continuation' refers to pagination within the API responses
+        while continuation != None and not exit_flag:
+            #If it's our first time through the loop, we leave off the continuation param
+            if continuation == '':
+                url = "https://api-arbitrum.reservoir.tools/orders/asks/v5?contracts=0x47a91457a3a1f700097199fd63c039c4784384ab"
+            else:
+                url = "https://api-arbitrum.reservoir.tools/orders/asks/v5?contracts=0x47a91457a3a1f700097199fd63c039c4784384ab&continuation="+continuation
+            response = requests.get(url, headers=headers)
+            data = json.loads(response.text)
+
+            #Go through all the transfers on the contract looking for ones that have a price associated with them (sale events)
+            for i in data['orders']:
+                print(i['criteria']['data']['token']['tokenId'])
+                listing_id = i['id']
+                #Once we reach the last one we posted, we can stop calling the API and stop adding the events to our list
+                if listing_id == latest_listing_id:
+                    exit_flag = True
+                    break
+                else:
+                    #If we come across a canceled or fulfilled listing, we don't want to post that
+                    if i['status'] == "active":
+                        listings.append(i)
+
+            continuation = data['continuation']
+            await asyncio.sleep(1)
+            #We'll pause for a second so we don't get rate limited
+
         conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
         cur = conn.cursor()
 
@@ -233,6 +268,7 @@ async def track():
             await asyncio.sleep(1)
             #We'll pause for a second so we don't get rate limited
 
+        #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(offers):
             token_id = i['criteria']['data']['token']['tokenId']
             offer_price = i['price']['amount']['decimal']
@@ -249,10 +285,46 @@ async def track():
             embed = discord.Embed(title=token_name, description=f"{token_name} received a {offer_price} {offer_symbol} offer at <t:{timestamp}:f>.\n\nhttps://prohibition.art/token/{token_id}")
             embed.set_image(url=image_url)
             await listings_channel.send(embed=embed)
+            #Update our latest event so we know where we left off for next time
             command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_offer_id'".format(latest_offer_id)
             cur.execute(command)
             conn.commit()
             await asyncio.sleep(1)
+            #We'll pause for a second so we don't get rate limited
+
+        #Go through our list in reverse order so that we post the oldest events first
+        for i in reversed(listings):
+            token_id = i['criteria']['data']['token']['tokenId']
+            maker = i['maker']
+            url = "https://prohibition.art/api/u/"+maker
+            response = requests.get(url, headers=headers)
+            data = json.loads(response.text)
+            owner_handle = data['handle']
+            owner_profile = "https://prohibition.art/u/"+owner_handle
+            if owner_handle == maker:
+                owner_handle = owner_handle[:5] + "..." + owner_handle[len(owner_handle)-5:]
+            listing_price = i['price']['amount']['decimal']
+            listing_symbol = i['price']['currency']['symbol']
+            latest_listing_id = i['id']
+            timestamp_str = i['createdAt']
+            timestamp_dt = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+            timestamp = int(timestamp_dt.timestamp())
+            url = "https://api-arbitrum.reservoir.tools/tokens/v6?tokens=0x47a91457a3a1f700097199fd63c039c4784384ab%3A"+token_id
+            response = requests.get(url, headers=headers)
+            data = json.loads(response.text)
+            if data['tokens'] == []:
+                continue
+            token_name = data['tokens'][0]['token']['name']
+            image_url = data['tokens'][0]['token']['image']
+            embed = discord.Embed(title=token_name, description=f"{token_name} was listed for sale at <t:{timestamp}:f>.\n\n**Price:**\n{listing_price} {listing_symbol}\n\n*Owner:**\n[{owner_handle}]({owner_profile})\n\nhttps://prohibition.art/token/{token_id}")
+            embed.set_image(url=image_url)
+            await listings_channel.send(embed=embed)
+            #Update our latest event so we know where we left off for next time
+            command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_listing_id'".format(latest_listing_id)
+            cur.execute(command)
+            conn.commit()
+            await asyncio.sleep(1)
+            #We'll pause for a second so we don't get rate limited
 
         cur.close()
         conn.commit()
