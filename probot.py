@@ -316,7 +316,7 @@ async def track():
                 continue
             token_name = data['tokens'][0]['token']['name']
             image_url = data['tokens'][0]['token']['image']
-            embed = discord.Embed(title=token_name, description=f"{token_name} was listed for sale at <t:{timestamp}:f>.\n\n**Price:**\n{listing_price} {listing_symbol}\n\n*Owner:**\n[{owner_handle}]({owner_profile})\n\nhttps://prohibition.art/token/{token_id}")
+            embed = discord.Embed(title=token_name, description=f"{token_name} was listed for sale at <t:{timestamp}:f>.\n\n**Price:**\n{listing_price} {listing_symbol}\n\n**Owner:**\n[{owner_handle}]({owner_profile})\n\nhttps://prohibition.art/token/{token_id}")
             embed.set_image(url=image_url)
             await listings_channel.send(embed=embed)
             #Update our latest event so we know where we left off for next time
