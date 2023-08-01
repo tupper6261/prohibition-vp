@@ -252,7 +252,7 @@ async def track():
             token_name = i['token']['name']
             timestamp = i['timestamp']
             owner = i['to']
-            owner_handle, owner_profile = getUser(owner)
+            owner_handle, owner_profile = await getUser(owner)
             #We want to make sure we've waited at least 5 minutes since the mint so that the image has had time to render
             current_timestamp = int(time.time())
             difference = current_timestamp - int(timestamp)
@@ -274,9 +274,9 @@ async def track():
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(sales):
             owner = i['to']
-            owner_handle, owner_profile = getUser(owner)
+            owner_handle, owner_profile = await getUser(owner)
             seller = i['from']
-            seller_handle, seller_profile = getUser(seller)
+            seller_handle, seller_profile = await getUser(seller)
             token_name = i['token']['name']
             timestamp = i['timestamp']
             image_url = i['token']['image']
@@ -299,7 +299,7 @@ async def track():
             token_id = i['criteria']['data']['token']['tokenId']
             #Get information on the maker of the offer
             maker = i['maker']
-            maker_handle, maker_profile = getUser(maker)
+            maker_handle, maker_profile = await getUser(maker)
             #Get info on the offer
             offer_price = i['price']['amount']['decimal']
             offer_symbol = i['price']['currency']['symbol']
@@ -315,7 +315,7 @@ async def track():
             image_url = data['tokens'][0]['token']['image']
             owner_address = data['tokens'][0]['token']['owner']
             #Get info on the current owner
-            owner_handle, owner_profile = getUser(owner_address)
+            owner_handle, owner_profile = await getUser(owner_address)
             embed = discord.Embed(title=token_name, description=f"{token_name} received a {offer_price} {offer_symbol} offer at <t:{timestamp}:f>.\n\n**Offer Maker:**\n[{maker_handle}]({maker_profile})\n\n**Current Owner:**\n[{owner_handle}]({owner_profile})\n\nhttps://prohibition.art/token/{token_id}")
             embed.set_image(url=image_url)
             await listings_channel.send(embed=embed)
@@ -331,7 +331,7 @@ async def track():
             token_id = i['criteria']['data']['token']['tokenId']
             #Get info on the current owner
             maker = i['maker']
-            maker_handle, maker_profile = getUser(maker)
+            maker_handle, maker_profile = await getUser(maker)
             #Get info on the listing
             listing_price = i['price']['amount']['decimal']
             listing_symbol = i['price']['currency']['symbol']
