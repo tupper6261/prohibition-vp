@@ -4,7 +4,7 @@ from discord.ui import Button, View, Select
 import os
 from dotenv import load_dotenv
 import asyncio
-from web3 import Web3, WebsocketProvider
+from web3 import Web3, WebsocketProvider, HTTPProvider
 from datetime import datetime
 import requests
 import psycopg2
@@ -15,7 +15,7 @@ load_dotenv()
 
 DATABASE_TOKEN = os.getenv('DATABASE_TOKEN')
 BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
-ALCHEMY_API_KEY = os.getenv('ALCHEMY_API_KEY')
+ALCHEMY_MAINNET_API_KEY = os.getenv('ALCHEMY_MAINNET_API_KEY')
 RESERVOIR_API_KEY = os.getenv('RESERVOIR_API_KEY')
 prohibitionContract = "0x47A91457a3a1f700097199Fd63c039c4784384aB"
 
@@ -64,6 +64,29 @@ async def on_ready():
     while True:
         await track()
         await asyncio.sleep(60)
+
+async def getUser(address):
+    headers = {
+        "accept": "*/*"
+    }
+    url = "https://prohibition.art/api/u/"+address
+    response = requests.get(url, headers=headers)
+    data = json.loads(response.text)
+    if data == '{"code":"NOT_FOUND","error":"Profile not found"}':
+        owner_profile = "https://opensea.io/"+address
+        w3 = Web3(HTTPProvider('https://eth-mainnet.g.alchemy.com/v2/'+ALCHEMY_MAINNET_API_KEY))
+        owner_handle = w3.ens.name(address)
+        if owner_handle == None:
+            owner_handle = address
+    else:
+        owner_handle = data['handle']
+        owner_profile = "https://prohibition.art/u/"+owner_handle
+    if owner_handle == address:
+        owner_handle = owner_handle[:5] + "..." + owner_handle[len(owner_handle)-5:]
+
+    return owner_handle, owner_profile
+
+
 
 async def track():
     try:
@@ -229,21 +252,12 @@ async def track():
             token_name = i['token']['name']
             timestamp = i['timestamp']
             owner = i['to']
-            url = "https://prohibition.art/api/u/"+owner
-            response = requests.get(url, headers=headers)
-            data = json.loads(response.text)
-            if data == '{"code":"NOT_FOUND","error":"Profile not found"}':
-                owner_profile = "https://opensea.io/"+owner
-            else:
-                owner_handle = data['handle']
-                owner_profile = "https://prohibition.art/u/"+owner_handle
-            if owner_handle == owner:
-                owner_handle = owner_handle[:5] + "..." + owner_handle[len(owner_handle)-5:]
+            owner_handle, owner_profile = getUser(owner)
             #We want to make sure we've waited at least 5 minutes since the mint so that the image has had time to render
             current_timestamp = int(time.time())
             difference = current_timestamp - int(timestamp)
             if difference < 300:
-                await asyncio.sleep(300 - difference)
+                await asyncio.sleep(300)
             image_url = i['token']['image']
             token_id = i['token']['tokenId']
             latest_mint_hash = i['txHash']
@@ -260,27 +274,9 @@ async def track():
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(sales):
             owner = i['to']
-            url = "https://prohibition.art/api/u/"+owner
-            response = requests.get(url, headers=headers)
-            data = json.loads(response.text)
-            if data == '{"code":"NOT_FOUND","error":"Profile not found"}':
-                owner_profile = "https://opensea.io/"+owner
-            else:
-                owner_handle = data['handle']
-                owner_profile = "https://prohibition.art/u/"+owner_handle
-            if owner_handle == owner:
-                owner_handle = owner_handle[:5] + "..." + owner_handle[len(owner_handle)-5:]
+            owner_handle, owner_profile = getUser(owner)
             seller = i['from']
-            url = "https://prohibition.art/api/u/"+seller
-            response = requests.get(url, headers=headers)
-            data = json.loads(response.text)
-            if data == '{"code":"NOT_FOUND","error":"Profile not found"}':
-                seller_profile = "https://opensea.io/"+seller
-            else:
-                seller_handle = data['handle']
-                seller_profile = "https://prohibition.art/u/"+seller_handle
-            if seller_handle == seller:
-                seller_handle = seller_handle[:5] + "..." + seller_handle[len(seller_handle)-5:]
+            seller_handle, seller_profile = getUser(seller)
             token_name = i['token']['name']
             timestamp = i['timestamp']
             image_url = i['token']['image']
@@ -303,16 +299,7 @@ async def track():
             token_id = i['criteria']['data']['token']['tokenId']
             #Get information on the maker of the offer
             maker = i['maker']
-            url = "https://prohibition.art/api/u/"+maker
-            response = requests.get(url, headers=headers)
-            data = json.loads(response.text)
-            if data == '{"code":"NOT_FOUND","error":"Profile not found"}':
-                maker_profile = "https://opensea.io/"+maker
-            else:
-                maker_handle = data['handle']
-                maker_profile = "https://prohibition.art/u/"+maker_handle
-                if maker_handle == maker:
-                    maker_handle = maker_handle[:5] + "..." + maker_handle[len(maker_handle)-5:]
+            maker_handle, maker_profile = getUser(maker)
             #Get info on the offer
             offer_price = i['price']['amount']['decimal']
             offer_symbol = i['price']['currency']['symbol']
@@ -328,16 +315,7 @@ async def track():
             image_url = data['tokens'][0]['token']['image']
             owner_address = data['tokens'][0]['token']['owner']
             #Get info on the current owner
-            url = "https://prohibition.art/api/u/"+owner_address
-            response = requests.get(url, headers=headers)
-            data = json.loads(response.text)
-            if data == '{"code":"NOT_FOUND","error":"Profile not found"}':
-                owner_profile = "https://opensea.io/"+owner_address
-            else:
-                owner_handle = data['handle']
-                owner_profile = "https://prohibition.art/u/"+owner_handle
-            if owner_handle == maker:
-                owner_handle = owner_handle[:5] + "..." + owner_handle[len(owner_handle)-5:]
+            owner_handle, owner_profile = getUser(owner_address)
             embed = discord.Embed(title=token_name, description=f"{token_name} received a {offer_price} {offer_symbol} offer at <t:{timestamp}:f>.\n\n**Offer Maker:**\n[{maker_handle}]({maker_profile})\n\n**Current Owner:**\n[{owner_handle}]({owner_profile})\n\nhttps://prohibition.art/token/{token_id}")
             embed.set_image(url=image_url)
             await listings_channel.send(embed=embed)
@@ -353,16 +331,7 @@ async def track():
             token_id = i['criteria']['data']['token']['tokenId']
             #Get info on the current owner
             maker = i['maker']
-            url = "https://prohibition.art/api/u/"+maker
-            response = requests.get(url, headers=headers)
-            data = json.loads(response.text)
-            if data == '{"code":"NOT_FOUND","error":"Profile not found"}':
-                owner_profile = "https://opensea.io/"+maker
-            else:
-                owner_handle = data['handle']
-                owner_profile = "https://prohibition.art/u/"+owner_handle
-            if owner_handle == maker:
-                owner_handle = owner_handle[:5] + "..." + owner_handle[len(owner_handle)-5:]
+            maker_handle, maker_profile = getUser(maker)
             #Get info on the listing
             listing_price = i['price']['amount']['decimal']
             listing_symbol = i['price']['currency']['symbol']
