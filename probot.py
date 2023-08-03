@@ -249,6 +249,7 @@ async def track():
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(mints):
+            print (i)
             token_name = i['token']['name']
             timestamp = i['timestamp']
             owner = i['to']
