@@ -283,11 +283,7 @@ async def track():
             price_symbol = i['price']['currency']['symbol']
             price_amount = i['price']['amount']['decimal']
             latest_sale_hash = i['txHash']
-            #Get info on the token
-            url = "https://api-arbitrum.reservoir.tools/tokens/v6?tokens=0x47a91457a3a1f700097199fd63c039c4784384ab%3A"+token_id
-            response = requests.get(url, headers=headers)
-            data = json.loads(response.text)
-            image_url = data['tokens'][0]['token']['image']
+            image_url = i['token']['image']
             embed = discord.Embed(title=token_name, description=f"{token_name} sold for {price_amount} {price_symbol} at <t:{timestamp}:f>.\n\n**Buyer:**\n[{owner_handle}]({owner_profile})\n\n**Seller:**\n[{seller_handle}]({seller_profile})\n\nhttps://prohibition.art/token/{token_id}")
             embed.set_image(url=image_url)
             await sales_channel.send(embed=embed)
