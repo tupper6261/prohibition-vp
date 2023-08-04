@@ -10,6 +10,7 @@ import requests
 import psycopg2
 import json
 import time
+import sys
 
 load_dotenv()
 
@@ -262,7 +263,7 @@ async def track():
             while response_code != 200 and wait_time > 0:
                 response = requests.get(image_url, headers=headers)
                 response_code = response.status_code
-                time.sleep(1)
+                await asyncio.sleep(60)
                 wait_time -= 1
             timestamp = i['timestamp']
             owner = i['to']
@@ -298,7 +299,7 @@ async def track():
             while response_code != 200 and wait_time > 0:
                 response = requests.get(image_url, headers=headers)
                 response_code = response.status_code
-                time.sleep(1)
+                await asyncio.sleep(60)
                 wait_time -= 1
             timestamp = i['timestamp']
             price_symbol = i['price']['currency']['symbol']
@@ -343,7 +344,7 @@ async def track():
             while response_code != 200 and wait_time > 0:
                 response = requests.get(image_url, headers=headers)
                 response_code = response.status_code
-                time.sleep(1)
+                await asyncio.sleep(60)
                 wait_time -= 1
             owner_address = data['tokens'][0]['token']['owner']
             #Get info on the current owner
@@ -389,7 +390,7 @@ async def track():
             while response_code != 200 and wait_time > 0:
                 response = requests.get(image_url, headers=headers)
                 response_code = response.status_code
-                time.sleep(1)
+                await asyncio.sleep(60)
                 wait_time -= 1
             owner_address = data['tokens'][0]['token']['owner']
             #Get info on the current owner
@@ -410,7 +411,9 @@ async def track():
 
     #If an error occurs, we're gonna log it and pause for a minute, then try again
     except Exception as e:
-        print(f"An error occurred: {e}")
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        line_number = exc_tb.tb_lineno
+        print(f"An error occurred: {e} at line {line_number}")
         await asyncio.sleep(60)
 
 bot.run(BOT_TOKEN)
