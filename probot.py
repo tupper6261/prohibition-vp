@@ -252,7 +252,10 @@ async def track():
             token_id = i['token']['tokenId']
             collection_name = i['token']['collection']['name']
             token_name, token_artist = collection_name.rsplit(" by ", 1)
-            token_name = token_name + " #"+ token_id[-6:].lstrip('0')
+            if token_id[-6:].lstrip('0') == "":
+                token_name = token_name + " #0"
+            else:
+                token_name = token_name + " #"+ token_id[-6:].lstrip('0')
             image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
             response_code = 404
             wait_time = 60
@@ -285,7 +288,10 @@ async def track():
             token_id = i['token']['tokenId']
             collection_name = i['token']['collection']['name']
             token_name, token_artist = collection_name.rsplit(" by ", 1)
-            token_name = token_name + " #"+ token_id[-6:].lstrip('0')
+            if token_id[-6:].lstrip('0') == "":
+                token_name = token_name + " #0"
+            else:
+                token_name = token_name + " #"+ token_id[-6:].lstrip('0')
             image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
             response_code = 404
             wait_time = 60
@@ -327,7 +333,10 @@ async def track():
             data = json.loads(response.text)
             collection_name = i['token']['collection']['name']
             token_name, token_artist = collection_name.rsplit(" by ", 1)
-            token_name = token_name + " #"+ token_id[-6:].lstrip('0')
+            if token_id[-6:].lstrip('0') == "":
+                token_name = token_name + " #0"
+            else:
+                token_name = token_name + " #"+ token_id[-6:].lstrip('0')
             image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
             response_code = 404
             wait_time = 60
@@ -370,7 +379,10 @@ async def track():
                 continue
             collection_name = i['token']['collection']['name']
             token_name, token_artist = collection_name.rsplit(" by ", 1)
-            token_name = token_name + " #"+ token_id[-6:].lstrip('0')
+            if token_id[-6:].lstrip('0') == "":
+                token_name = token_name + " #0"
+            else:
+                token_name = token_name + " #"+ token_id[-6:].lstrip('0')
             image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
             response_code = 404
             wait_time = 60
