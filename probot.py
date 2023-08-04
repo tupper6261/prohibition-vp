@@ -332,7 +332,7 @@ async def track():
             url = "https://api-arbitrum.reservoir.tools/tokens/v6?tokens=0x47a91457a3a1f700097199fd63c039c4784384ab%3A"+token_id
             response = requests.get(url, headers=headers)
             data = json.loads(response.text)
-            collection_name = i['token']['collection']['name']
+            collection_name = data['tokens'][0]['token']['collection']['name']
             token_name, token_artist = collection_name.rsplit(" by ", 1)
             if token_id[-6:].lstrip('0') == "":
                 token_name = token_name + " #0"
@@ -378,7 +378,7 @@ async def track():
             data = json.loads(response.text)
             if data['tokens'] == []:
                 continue
-            collection_name = i['token']['collection']['name']
+            collection_name = data['tokens'][0]['token']['collection']['name']
             token_name, token_artist = collection_name.rsplit(" by ", 1)
             if token_id[-6:].lstrip('0') == "":
                 token_name = token_name + " #0"
