@@ -249,18 +249,23 @@ async def track():
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(mints):
-            token_name = i['token']['name']
+            token_id = i['token']['tokenId']
+            collection_name = i['token']['collection']['name']
+            token_name, token_artist = collection_name.rsplit(" by ", 1)
+            token_name = token_name + " #"+ token_id[-6:].lstrip('0')
+            image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
+            response_code = 404
+            wait_time = 60
+            while response_code != 200 and wait_time > 0:
+                response = requests.get(image_url, headers=headers)
+                response_code = response.status_code
+                time.sleep(1)
+                wait_time -= 1
             timestamp = i['timestamp']
             owner = i['to']
             owner_handle, owner_profile = await getUser(owner)
-            #We want to make sure we've waited at least 5 minutes since the mint so that the image has had time to render
-            current_timestamp = int(time.time())
-            difference = current_timestamp - int(timestamp)
-            if difference < 300:
-                await asyncio.sleep(300)
-            image_url = i['token']['image']
-            token_id = i['token']['tokenId']
             latest_mint_hash = i['txHash']
+
             embed = discord.Embed(title=token_name, description=f"{token_name} was minted by [{owner_handle}]({owner_profile}) at <t:{timestamp}:f>.\n\nhttps://prohibition.art/token/{token_id}")
             embed.set_image(url=image_url)
             await mint_channel.send(embed=embed)
@@ -277,13 +282,22 @@ async def track():
             owner_handle, owner_profile = await getUser(owner)
             seller = i['from']
             seller_handle, seller_profile = await getUser(seller)
-            token_name = i['token']['name']
-            timestamp = i['timestamp']
             token_id = i['token']['tokenId']
+            collection_name = i['token']['collection']['name']
+            token_name, token_artist = collection_name.rsplit(" by ", 1)
+            token_name = token_name + " #"+ token_id[-6:].lstrip('0')
+            image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
+            response_code = 404
+            wait_time = 60
+            while response_code != 200 and wait_time > 0:
+                response = requests.get(image_url, headers=headers)
+                response_code = response.status_code
+                time.sleep(1)
+                wait_time -= 1
+            timestamp = i['timestamp']
             price_symbol = i['price']['currency']['symbol']
             price_amount = i['price']['amount']['decimal']
             latest_sale_hash = i['txHash']
-            image_url = i['token']['image']
             embed = discord.Embed(title=token_name, description=f"{token_name} sold for {price_amount} {price_symbol} at <t:{timestamp}:f>.\n\n**Buyer:**\n[{owner_handle}]({owner_profile})\n\n**Seller:**\n[{seller_handle}]({seller_profile})\n\nhttps://prohibition.art/token/{token_id}")
             embed.set_image(url=image_url)
             await sales_channel.send(embed=embed)
@@ -311,8 +325,17 @@ async def track():
             url = "https://api-arbitrum.reservoir.tools/tokens/v6?tokens=0x47a91457a3a1f700097199fd63c039c4784384ab%3A"+token_id
             response = requests.get(url, headers=headers)
             data = json.loads(response.text)
-            token_name = data['tokens'][0]['token']['name']
-            image_url = data['tokens'][0]['token']['image']
+            collection_name = i['token']['collection']['name']
+            token_name, token_artist = collection_name.rsplit(" by ", 1)
+            token_name = token_name + " #"+ token_id[-6:].lstrip('0')
+            image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
+            response_code = 404
+            wait_time = 60
+            while response_code != 200 and wait_time > 0:
+                response = requests.get(image_url, headers=headers)
+                response_code = response.status_code
+                time.sleep(1)
+                wait_time -= 1
             owner_address = data['tokens'][0]['token']['owner']
             #Get info on the current owner
             owner_handle, owner_profile = await getUser(owner_address)
@@ -345,8 +368,17 @@ async def track():
             data = json.loads(response.text)
             if data['tokens'] == []:
                 continue
-            token_name = data['tokens'][0]['token']['name']
-            image_url = data['tokens'][0]['token']['image']
+            collection_name = i['token']['collection']['name']
+            token_name, token_artist = collection_name.rsplit(" by ", 1)
+            token_name = token_name + " #"+ token_id[-6:].lstrip('0')
+            image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
+            response_code = 404
+            wait_time = 60
+            while response_code != 200 and wait_time > 0:
+                response = requests.get(image_url, headers=headers)
+                response_code = response.status_code
+                time.sleep(1)
+                wait_time -= 1
             owner_address = data['tokens'][0]['token']['owner']
             #Get info on the current owner
             owner_handle, owner_profile = await getUser(owner_address)
