@@ -270,7 +270,7 @@ async def track():
             owner_handle, owner_profile = await getUser(owner)
             latest_mint_hash = i['txHash']
 
-            embed = discord.Embed(title=token_name, description=f"{token_name} was minted by [{owner_handle}]({owner_profile}) at <t:{timestamp}:f>.\n\nhttps://prohibition.art/token/{token_id}")
+            embed = discord.Embed(title=token_name, description=f"{token_name} by {token_artist} was minted by [{owner_handle}]({owner_profile}) at <t:{timestamp}:f>.\n\nhttps://prohibition.art/token/{token_id}")
             embed.set_image(url=image_url)
             await mint_channel.send(embed=embed)
             #Update our latest event so we know where we left off for next time
@@ -305,7 +305,7 @@ async def track():
             price_symbol = i['price']['currency']['symbol']
             price_amount = i['price']['amount']['decimal']
             latest_sale_hash = i['txHash']
-            embed = discord.Embed(title=token_name, description=f"{token_name} sold for {price_amount} {price_symbol} at <t:{timestamp}:f>.\n\n**Buyer:**\n[{owner_handle}]({owner_profile})\n\n**Seller:**\n[{seller_handle}]({seller_profile})\n\nhttps://prohibition.art/token/{token_id}")
+            embed = discord.Embed(title=token_name, description=f"{token_name} by {token_artist} sold for {price_amount} {price_symbol} at <t:{timestamp}:f>.\n\n**Buyer:**\n[{owner_handle}]({owner_profile})\n\n**Seller:**\n[{seller_handle}]({seller_profile})\n\nhttps://prohibition.art/token/{token_id}")
             embed.set_image(url=image_url)
             await sales_channel.send(embed=embed)
             #Update our latest event so we know where we left off for next time
@@ -349,7 +349,7 @@ async def track():
             owner_address = data['tokens'][0]['token']['owner']
             #Get info on the current owner
             owner_handle, owner_profile = await getUser(owner_address)
-            embed = discord.Embed(title=token_name, description=f"{token_name} received a {offer_price} {offer_symbol} offer at <t:{timestamp}:f>.\n\n**Offer Maker:**\n[{maker_handle}]({maker_profile})\n\n**Current Owner:**\n[{owner_handle}]({owner_profile})\n\nhttps://prohibition.art/token/{token_id}")
+            embed = discord.Embed(title=token_name, description=f"{token_name} by {token_artist} received a {offer_price} {offer_symbol} offer at <t:{timestamp}:f>.\n\n**Offer Maker:**\n[{maker_handle}]({maker_profile})\n\n**Current Owner:**\n[{owner_handle}]({owner_profile})\n\nhttps://prohibition.art/token/{token_id}")
             embed.set_image(url=image_url)
             await listings_channel.send(embed=embed)
             #Update our latest event so we know where we left off for next time
@@ -395,7 +395,7 @@ async def track():
             owner_address = data['tokens'][0]['token']['owner']
             #Get info on the current owner
             owner_handle, owner_profile = await getUser(owner_address)
-            embed = discord.Embed(title=token_name, description=f"{token_name} was listed for sale at <t:{timestamp}:f>.\n\n**Price:**\n{listing_price} {listing_symbol}\n\n**Owner:**\n[{owner_handle}]({owner_profile})\n\nhttps://prohibition.art/token/{token_id}")
+            embed = discord.Embed(title=token_name, description=f"{token_name} by {token_artist} was listed for sale at <t:{timestamp}:f>.\n\n**Price:**\n{listing_price} {listing_symbol}\n\n**Owner:**\n[{owner_handle}]({owner_profile})\n\nhttps://prohibition.art/token/{token_id}")
             embed.set_image(url=image_url)
             await listings_channel.send(embed=embed)
             #Update our latest event so we know where we left off for next time
