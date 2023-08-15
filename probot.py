@@ -18,6 +18,7 @@ DATABASE_TOKEN = os.getenv('DATABASE_TOKEN')
 BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
 ALCHEMY_MAINNET_API_KEY = os.getenv('ALCHEMY_MAINNET_API_KEY')
 RESERVOIR_API_KEY = os.getenv('RESERVOIR_API_KEY')
+OPENSEA_API_KEY = os.getenv('OPENSEA_API_KEY')
 prohibitionContract = "0x47A91457a3a1f700097199Fd63c039c4784384aB"
 
 # Set up the bot with the proper intents to read message content and reactions
@@ -128,6 +129,11 @@ async def track():
         headers = {
             "accept": "*/*",
             "x-api-key": RESERVOIR_API_KEY
+        }
+
+        OSheaders = {
+            "accept": "application/json",
+            "X-API-KEY": OPENSEA_API_KEY
         }
 
         exit_flag = False
@@ -277,6 +283,9 @@ async def track():
             command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_mint_hash'".format(latest_mint_hash)
             cur.execute(command)
             conn.commit()
+            #Call the OpenSea refresh metadata endpoint and get the newly rendered image updated
+            url = "https://api.opensea.io/v2/chain/arbitrum/contract/0x47A91457a3a1f700097199Fd63c039c4784384aB/nfts/0/refresh"
+            response = requests.post(url, headers=OSheaders)
             await asyncio.sleep(1)
             #We'll pause for a second so we don't get rate limited
 
