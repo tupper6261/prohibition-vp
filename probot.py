@@ -284,7 +284,7 @@ async def track():
             cur.execute(command)
             conn.commit()
             #Call the OpenSea refresh metadata endpoint and get the newly rendered image updated
-            url = "https://api.opensea.io/v2/chain/arbitrum/contract/0x47A91457a3a1f700097199Fd63c039c4784384aB/nfts/0/refresh"
+            url = "https://api.opensea.io/v2/chain/arbitrum/contract/0x47A91457a3a1f700097199Fd63c039c4784384aB/nfts/" + token_id + "/refresh"
             response = requests.post(url, headers=OSheaders)
             await asyncio.sleep(1)
             #We'll pause for a second so we don't get rate limited
