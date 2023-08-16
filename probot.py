@@ -326,8 +326,6 @@ async def track():
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(offers):
-            print (i)
-            token_id = i['criteria']['data']['token']['tokenId']
             #Get information on the maker of the offer
             maker = i['maker']
             maker_handle, maker_profile = await getUser(maker)
@@ -338,30 +336,47 @@ async def track():
             timestamp_str = i['createdAt']
             timestamp_dt = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S.%fZ")
             timestamp = int(timestamp_dt.timestamp())
-            #Get info on the token
-            url = "https://api-arbitrum.reservoir.tools/tokens/v6?tokens=0x47a91457a3a1f700097199fd63c039c4784384ab%3A"+token_id
-            response = requests.get(url, headers=headers)
-            data = json.loads(response.text)
-            collection_name = data['tokens'][0]['token']['collection']['name']
-            token_name, token_artist = collection_name.rsplit(" by ", 1)
-            if token_id[-6:].lstrip('0') == "":
-                token_name = token_name + " #0"
+            #if this is a collection offer
+            if i['criteria']['kind'] == "collection":
+                collection_id_base = i['criteria']['data']['collection']['id'].split(":")[1]
+                collection_id = str(int(collection_id_base)/1000000)
+                offer_quantity = i['quantityRemaining']
+                url = "https://prohibition.art/api/project/0x47A91457a3a1f700097199Fd63c039c4784384aB-"+collection_id
+                response = requests.get(url, headers=headers)
+                data = json.loads(response.text)
+                collection_name = data['name']
+                collection_artist = data['artistName']
+                project_slug = data['slug']
+                image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + collection_id_base + ".png"
+                embed = discord.Embed(title=f"{collection_name} by {collection_artist}", description=f"{collection_name} received {offer_quantity} collection offer(s) of {offer_price} {offer_symbol} offer at <t:{timestamp}:f>.\n\n**Offer Maker:**\n[{maker_handle}]({maker_profile})\n\nhttps://prohibition.art/project/{project_slug}")
+                embed.set_image(url=image_url)
+                await listings_channel.send(embed=embed)
             else:
-                token_name = token_name + " #"+ token_id[-6:].lstrip('0')
-            image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
-            response_code = 404
-            wait_time = 60
-            while response_code != 200 and wait_time > 0:
-                response = requests.get(image_url, headers=headers)
-                response_code = response.status_code
-                await asyncio.sleep(60)
-                wait_time -= 1
-            owner_address = data['tokens'][0]['token']['owner']
-            #Get info on the current owner
-            owner_handle, owner_profile = await getUser(owner_address)
-            embed = discord.Embed(title=f"{token_name} by {token_artist}", description=f"{token_name} received a {offer_price} {offer_symbol} offer at <t:{timestamp}:f>.\n\n**Offer Maker:**\n[{maker_handle}]({maker_profile})\n\n**Current Owner:**\n[{owner_handle}]({owner_profile})\n\nhttps://prohibition.art/token/{token_id}")
-            embed.set_image(url=image_url)
-            await listings_channel.send(embed=embed)
+                token_id = i['criteria']['data']['token']['tokenId']
+                #Get info on the token
+                url = "https://api-arbitrum.reservoir.tools/tokens/v6?tokens=0x47a91457a3a1f700097199fd63c039c4784384ab%3A"+token_id
+                response = requests.get(url, headers=headers)
+                data = json.loads(response.text)
+                collection_name = data['tokens'][0]['token']['collection']['name']
+                token_name, token_artist = collection_name.rsplit(" by ", 1)
+                if token_id[-6:].lstrip('0') == "":
+                    token_name = token_name + " #0"
+                else:
+                    token_name = token_name + " #"+ token_id[-6:].lstrip('0')
+                image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
+                response_code = 404
+                wait_time = 60
+                while response_code != 200 and wait_time > 0:
+                    response = requests.get(image_url, headers=headers)
+                    response_code = response.status_code
+                    await asyncio.sleep(60)
+                    wait_time -= 1
+                owner_address = data['tokens'][0]['token']['owner']
+                #Get info on the current owner
+                owner_handle, owner_profile = await getUser(owner_address)
+                embed = discord.Embed(title=f"{token_name} by {token_artist}", description=f"{token_name} received a {offer_price} {offer_symbol} offer at <t:{timestamp}:f>.\n\n**Offer Maker:**\n[{maker_handle}]({maker_profile})\n\n**Current Owner:**\n[{owner_handle}]({owner_profile})\n\nhttps://prohibition.art/token/{token_id}")
+                embed.set_image(url=image_url)
+                await listings_channel.send(embed=embed)
             #Update our latest event so we know where we left off for next time
             command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_offer_id'".format(latest_offer_id)
             cur.execute(command)
