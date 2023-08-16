@@ -326,6 +326,7 @@ async def track():
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(offers):
+            print (i)
             token_id = i['criteria']['data']['token']['tokenId']
             #Get information on the maker of the offer
             maker = i['maker']
