@@ -348,7 +348,7 @@ async def track():
                 collection_artist = data['artistName']
                 project_slug = data['slug']
                 image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + collection_id_base + ".png"
-                embed = discord.Embed(title=f"{collection_name} by {collection_artist}", description=f"{collection_name} received {offer_quantity} collection offer(s) of {offer_price} {offer_symbol} offer at <t:{timestamp}:f>.\n\n**Offer Maker:**\n[{maker_handle}]({maker_profile})\n\nhttps://prohibition.art/project/{project_slug}")
+                embed = discord.Embed(title=f"{collection_name} by {collection_artist}", description=f"{collection_name} received {offer_quantity} collection offer(s) of {offer_price} {offer_symbol} at <t:{timestamp}:f>.\n\n**Offer Maker:**\n[{maker_handle}]({maker_profile})\n\nhttps://prohibition.art/project/{project_slug}")
                 embed.set_image(url=image_url)
                 await listings_channel.send(embed=embed)
             else:
