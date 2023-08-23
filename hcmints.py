@@ -94,29 +94,17 @@ async def track():
     try:
         #Get our discord server and channels
         guild = discord.utils.get(bot.guilds, id=1101580614945222708)
-        mint_channel = discord.utils.get(guild.channels, id=1126976550508712106)
+        mint_channel = discord.utils.get(guild.channels, id=1143961800690385016)
         sales_channel = discord.utils.get(guild.channels, id=1126976977199435786)
         listings_channel = discord.utils.get(guild.channels, id=1126977037765189752)
 
         #Get the last events we already posted
         conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
         cur = conn.cursor()
-        command = "select * from globalvariables where name = 'prohibition_latest_mint_hash'"
+        command = "select * from globalvariables where name = 'prohibition_latest_hc_mint_hash'"
         cur.execute(command)
         results = cur.fetchall()
         latest_mint_hash = results[0][1]
-        command = "select * from globalvariables where name = 'prohibition_latest_sale_hash'"
-        cur.execute(command)
-        results = cur.fetchall()
-        latest_sale_hash = results[0][1]
-        command = "select * from globalvariables where name = 'prohibition_latest_offer_id'"
-        cur.execute(command)
-        results = cur.fetchall()
-        latest_offer_id = results[0][1]
-        command = "select * from globalvariables where name = 'prohibition_latest_listing_id'"
-        cur.execute(command)
-        results = cur.fetchall()
-        latest_listing_id = results[0][1]
         cur.close()
         conn.commit()
         conn.close()
@@ -164,6 +152,8 @@ async def track():
 
             #We'll pause for a second so we don't get rate limited
             await asyncio.sleep(1)
+
+        '''
 
         exit_flag = False
         continuation = ''
@@ -251,6 +241,8 @@ async def track():
             await asyncio.sleep(1)
             #We'll pause for a second so we don't get rate limited
 
+        '''
+
         conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
         cur = conn.cursor()
 
@@ -258,8 +250,8 @@ async def track():
         for i in reversed(mints):
             token_id = i['token']['tokenId']
             collection_id = int(token_id)/1000000
-            #If this mint is not from the H-C collection
-            if collection_id != 100:
+            #If this mint is from the H-C collection
+            if collection_id == 100:
                 collection_name = i['token']['collection']['name']
                 token_name, token_artist = collection_name.rsplit(" by ", 1)
                 if token_id[-6:].lstrip('0') == "":
@@ -291,6 +283,8 @@ async def track():
                 response = requests.post(url, headers=OSheaders)
                 await asyncio.sleep(1)
                 #We'll pause for a second so we don't get rate limited
+
+        '''
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(sales):
@@ -432,6 +426,8 @@ async def track():
             conn.commit()
             await asyncio.sleep(1)
             #We'll pause for a second so we don't get rate limited
+
+        '''
 
         cur.close()
         conn.commit()
