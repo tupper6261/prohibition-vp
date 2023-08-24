@@ -257,7 +257,6 @@ async def track():
             token_id = i['token']['tokenId']
             collection_id = int(int(token_id)/1000000)
             #If this mint is from the H-C collection
-            print (collection_id)
             if collection_id == 100:
                 collection_name = i['token']['collection']['name']
                 token_name, token_artist = collection_name.rsplit(" by ", 1)
