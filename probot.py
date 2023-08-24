@@ -263,7 +263,7 @@ async def track():
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(mints):
             token_id = i['token']['tokenId']
-            collection_id = int(token_id)/1000000
+            collection_id = int(int(token_id)/1000000)
             #If this mint is not from the H-C collection
             if collection_id != 100:
                 collection_name = i['token']['collection']['name']
