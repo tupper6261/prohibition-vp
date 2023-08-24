@@ -67,6 +67,27 @@ async def on_ready():
         await track()
         await asyncio.sleep(60)
 
+# List of role names that you want to ignore
+IGNORED_ROLES = ['Admin', 'Prohibition Team', 'Shillr Team', 'OG']
+
+@bot.event
+async def on_message(message):
+    # Check if the message author is the bot itself
+    if message.author == bot.user:
+        return
+
+    # Check if the message author has one of the ignored roles
+    user_roles = [role.name for role in message.author.roles]
+    if any(role in IGNORED_ROLES for role in user_roles):
+        return
+
+    # Check if the message contains a link
+    if 'http://' in message.content or 'https://' in message.content:
+        if 'x.com' in message.content or 'twitter.com' in message.content or 'prohibition.art' in message.content or 'opensea.io' in message.content:
+            return
+        else:
+            await message.delete()
+
 async def getUser(address):
     headers = {
         "accept": "*/*"
