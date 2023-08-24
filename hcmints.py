@@ -257,6 +257,7 @@ async def track():
             token_id = i['token']['tokenId']
             collection_id = int(token_id)/1000000
             #If this mint is from the H-C collection
+            print (collection_id)
             if collection_id == 100:
                 collection_name = i['token']['collection']['name']
                 token_name, token_artist = collection_name.rsplit(" by ", 1)
@@ -281,7 +282,7 @@ async def track():
                 embed.set_image(url=image_url)
                 await mint_channel.send(embed=embed)
                 #Update our latest event so we know where we left off for next time
-                command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_mint_hash'".format(latest_mint_hash)
+                command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_hc_mint_hash'".format(latest_mint_hash)
                 cur.execute(command)
                 conn.commit()
                 #Call the OpenSea refresh metadata endpoint and get the newly rendered image updated
