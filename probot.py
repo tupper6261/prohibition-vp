@@ -21,6 +21,8 @@ RESERVOIR_API_KEY = os.getenv('RESERVOIR_API_KEY')
 OPENSEA_API_KEY = os.getenv('OPENSEA_API_KEY')
 prohibitionContract = "0x47A91457a3a1f700097199Fd63c039c4784384aB"
 
+DELETE_LINKS = False
+
 # Set up the bot with the proper intents to read message content and reactions
 intents = discord.Intents.default()
 intents.message_content = True
@@ -70,23 +72,26 @@ async def on_ready():
 # List of role names that you want to ignore
 IGNORED_ROLES = ['Admin', 'Prohibition Team', 'Shillr Team', 'OG']
 
+'''
 @bot.event
 async def on_message(message):
-    # Check if the message author is the bot itself
-    if message.author == bot.user:
-        return
-
-    # Check if the message author has one of the ignored roles
-    user_roles = [role.name for role in message.author.roles]
-    if any(role in IGNORED_ROLES for role in user_roles):
-        return
-
-    # Check if the message contains a link
-    if 'http://' in message.content or 'https://' in message.content:
-        if 'x.com' in message.content or 'twitter.com' in message.content or 'prohibition.art' in message.content or 'opensea.io' in message.content:
+    if DELETE_LINKS:
+        # Check if the message author is the bot itself
+        if message.author == bot.user:
             return
-        else:
-            await message.delete()
+
+        # Check if the message author has one of the ignored roles
+        user_roles = [role.name for role in message.author.roles]
+        if any(role in IGNORED_ROLES for role in user_roles):
+            return
+
+        # Check if the message contains a link
+        if 'http://' in message.content or 'https://' in message.content:
+            if 'x.com' in message.content or 'twitter.com' in message.content or 'prohibition.art' in message.content or 'opensea.io' in message.content:
+                return
+            else:
+                await message.delete()
+'''
 
 async def getUser(address):
     headers = {
