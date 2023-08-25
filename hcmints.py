@@ -133,8 +133,6 @@ async def track():
         exit_flag = False
         continuation = ''
 
-        print ("pulling list of transactions")
-
         #'Continuation' refers to pagination within the API responses
         while continuation != None and not exit_flag:
             #If it's our first time through the loop, we leave off the continuation param
@@ -160,8 +158,6 @@ async def track():
 
             #We'll pause for a second so we don't get rate limited
             await asyncio.sleep(1)
-
-        print ("finished pulling list of transactions")
 
         '''
 
@@ -260,7 +256,6 @@ async def track():
         for i in reversed(mints):
             token_id = i['token']['tokenId']
             collection_id = int(int(token_id)/1000000)
-            print ("token id: " + token_id)
             #If this mint is from the H-C collection
             if collection_id == 100:
                 collection_name = i['token']['collection']['name']
@@ -272,11 +267,9 @@ async def track():
                 image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
                 wait_time = 60
                 #try to get the image url
-                print ("getting image url")
                 response = requests.get(image_url, headers=headers)
                 response_code = response.status_code
                 while response_code != 200 and wait_time > 0:
-                    print ("response code: " + str(response_code))
                     await asyncio.sleep(60)
                     response = requests.get(image_url, headers=headers)
                     response_code = response.status_code
@@ -294,12 +287,10 @@ async def track():
                 cur.execute(command)
                 conn.commit()
                 #Call the OpenSea refresh metadata endpoint and get the newly rendered image updated
-                print ("refreshing os metadata")
                 url = "https://api.opensea.io/v2/chain/arbitrum/contract/0x47A91457a3a1f700097199Fd63c039c4784384aB/nfts/" + token_id + "/refresh"
                 response = requests.post(url, headers=OSheaders)
                 await asyncio.sleep(1)
                 #We'll pause for a second so we don't get rate limited
-                print ("refreshing reservoir metadata")
                 url = "https://api-arbitrum.reservoir.tools/tokens/refresh/v1"
                 payload = {
                     "liquidityOnly": False,
