@@ -173,13 +173,20 @@ async def track():
 
         #'Continuation' refers to pagination within the API responses
         while continuation != None and not exit_flag:
-            #If it's our first time through the loop, we leave off the continuation param
-            if continuation == '':
-                url = "https://api-arbitrum.reservoir.tools/transfers/v3?contract=0x47A91457a3a1f700097199Fd63c039c4784384aB&limit=100"
-            else:
-                url = "https://api-arbitrum.reservoir.tools/transfers/v3?contract=0x47A91457a3a1f700097199Fd63c039c4784384aB&limit=100&continuation="+continuation
-            response = requests.get(url, headers=headers)
-            data = json.loads(response.text)
+            #Check if we've been rate limited, and if so, wait a second and try again
+            while True:
+                #If it's our first time through the loop, we leave off the continuation param
+                if continuation == '':
+                    url = "https://api-arbitrum.reservoir.tools/transfers/v3?contract=0x47A91457a3a1f700097199Fd63c039c4784384aB&limit=100"
+                else:
+                    url = "https://api-arbitrum.reservoir.tools/transfers/v3?contract=0x47A91457a3a1f700097199Fd63c039c4784384aB&limit=100&continuation="+continuation
+                response = requests.get(url, headers=headers)
+                data = json.loads(response.text)
+
+                if data == {'statusCode': 429, 'error': 'Too Many Requests', 'message': 'Max 120 credits in 60s reached, Detected tier 1, Blocked by rule ID 2. Please register for an API key by creating a free account at https://dashboard.reservoir.tools to increase your rate limit.'}:
+                    await asyncio.sleep(1)
+                else:
+                    break
 
             #Go through all the transfers on the contract looking for ones coming from the 0x0 address (mint events)
             for i in data['transfers']:
@@ -194,21 +201,25 @@ async def track():
 
             continuation = data['continuation']
 
-            #We'll pause for a second so we don't get rate limited
-            await asyncio.sleep(1)
-
         exit_flag = False
         continuation = ''
 
         #'Continuation' refers to pagination within the API responses
         while continuation != None and not exit_flag:
-            #If it's our first time through the loop, we leave off the continuation param
-            if continuation == '':
-                url = "https://api-arbitrum.reservoir.tools/transfers/v3?contract=0x47A91457a3a1f700097199Fd63c039c4784384aB&limit=100"
-            else:
-                url = "https://api-arbitrum.reservoir.tools/transfers/v3?contract=0x47A91457a3a1f700097199Fd63c039c4784384aB&limit=100&continuation="+continuation
-            response = requests.get(url, headers=headers)
-            data = json.loads(response.text)
+            #Check if we've been rate limited, and if so, wait a second and try again
+            while True:
+                #If it's our first time through the loop, we leave off the continuation param
+                if continuation == '':
+                    url = "https://api-arbitrum.reservoir.tools/transfers/v3?contract=0x47A91457a3a1f700097199Fd63c039c4784384aB&limit=100"
+                else:
+                    url = "https://api-arbitrum.reservoir.tools/transfers/v3?contract=0x47A91457a3a1f700097199Fd63c039c4784384aB&limit=100&continuation="+continuation
+                response = requests.get(url, headers=headers)
+                data = json.loads(response.text)
+
+                if data == {'statusCode': 429, 'error': 'Too Many Requests', 'message': 'Max 120 credits in 60s reached, Detected tier 1, Blocked by rule ID 2. Please register for an API key by creating a free account at https://dashboard.reservoir.tools to increase your rate limit.'}:
+                    await asyncio.sleep(1)
+                else:
+                    break
 
             #Go through all the transfers on the contract looking for ones that have a price associated with them (sale events)
             for i in data['transfers']:
@@ -222,21 +233,26 @@ async def track():
                         sales.append(i)
 
             continuation = data['continuation']
-            await asyncio.sleep(1)
-            #We'll pause for a second so we don't get rate limited
 
         exit_flag = False
         continuation = ''
 
         #'Continuation' refers to pagination within the API responses
         while continuation != None and not exit_flag:
-            #If it's our first time through the loop, we leave off the continuation param
-            if continuation == '':
-                url = "https://api-arbitrum.reservoir.tools/orders/bids/v6?contracts=0x47A91457a3a1f700097199Fd63c039c4784384aB"
-            else:
-                url = "https://api-arbitrum.reservoir.tools/orders/bids/v6?contracts=0x47A91457a3a1f700097199Fd63c039c4784384aB&continuation="+continuation
-            response = requests.get(url, headers=headers)
-            data = json.loads(response.text)
+            #Check if we've been rate limited, and if so, wait a second and try again
+            while True:
+                #If it's our first time through the loop, we leave off the continuation param
+                if continuation == '':
+                    url = "https://api-arbitrum.reservoir.tools/orders/bids/v6?contracts=0x47A91457a3a1f700097199Fd63c039c4784384aB"
+                else:
+                    url = "https://api-arbitrum.reservoir.tools/orders/bids/v6?contracts=0x47A91457a3a1f700097199Fd63c039c4784384aB&continuation="+continuation
+                response = requests.get(url, headers=headers)
+                data = json.loads(response.text)
+
+                if data == {'statusCode': 429, 'error': 'Too Many Requests', 'message': 'Max 120 credits in 60s reached, Detected tier 1, Blocked by rule ID 2. Please register for an API key by creating a free account at https://dashboard.reservoir.tools to increase your rate limit.'}:
+                    await asyncio.sleep(1)
+                else:
+                    break
 
             #Go through all the transfers on the contract looking for ones that have a price associated with them (sale events)
             for i in data['orders']:
@@ -251,21 +267,26 @@ async def track():
                         offers.append(i)
 
             continuation = data['continuation']
-            await asyncio.sleep(1)
-            #We'll pause for a second so we don't get rate limited
 
         exit_flag = False
         continuation = ''
 
         #'Continuation' refers to pagination within the API responses
         while continuation != None and not exit_flag:
-            #If it's our first time through the loop, we leave off the continuation param
-            if continuation == '':
-                url = "https://api-arbitrum.reservoir.tools/orders/asks/v5?contracts=0x47a91457a3a1f700097199fd63c039c4784384ab"
-            else:
-                url = "https://api-arbitrum.reservoir.tools/orders/asks/v5?contracts=0x47a91457a3a1f700097199fd63c039c4784384ab&continuation="+continuation
-            response = requests.get(url, headers=headers)
-            data = json.loads(response.text)
+            #Check if we've been rate limited, and if so, wait a second and try again
+            while True:
+                #If it's our first time through the loop, we leave off the continuation param
+                if continuation == '':
+                    url = "https://api-arbitrum.reservoir.tools/orders/asks/v5?contracts=0x47a91457a3a1f700097199fd63c039c4784384ab"
+                else:
+                    url = "https://api-arbitrum.reservoir.tools/orders/asks/v5?contracts=0x47a91457a3a1f700097199fd63c039c4784384ab&continuation="+continuation
+                response = requests.get(url, headers=headers)
+                data = json.loads(response.text)
+
+                if data == {'statusCode': 429, 'error': 'Too Many Requests', 'message': 'Max 120 credits in 60s reached, Detected tier 1, Blocked by rule ID 2. Please register for an API key by creating a free account at https://dashboard.reservoir.tools to increase your rate limit.'}:
+                    await asyncio.sleep(1)
+                else:
+                    break
 
             #Go through all the transfers on the contract looking for ones that have a price associated with them (sale events)
             for i in data['orders']:
@@ -280,8 +301,6 @@ async def track():
                         listings.append(i)
 
             continuation = data['continuation']
-            await asyncio.sleep(1)
-            #We'll pause for a second so we don't get rate limited
 
         conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
         cur = conn.cursor()
@@ -299,12 +318,14 @@ async def track():
                 else:
                     token_name = token_name + " #"+ token_id[-6:].lstrip('0')
                 image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
-                response_code = 404
                 wait_time = 60
+                #try to get the image url
+                response = requests.get(image_url, headers=headers)
+                response_code = response.status_code
                 while response_code != 200 and wait_time > 0:
+                    await asyncio.sleep(60)
                     response = requests.get(image_url, headers=headers)
                     response_code = response.status_code
-                    await asyncio.sleep(60)
                     wait_time -= 1
                 timestamp = i['timestamp']
                 owner = i['to']
@@ -329,9 +350,14 @@ async def track():
                     "overrideCoolDown": False,
                     "token": "0x47A91457a3a1f700097199Fd63c039c4784384aB:" + token_id
                 }
-                response = requests.post(url, json=payload, headers=refreshHeaders)
-                await asyncio.sleep(1)
-                #We'll pause for a second so we don't get rate limited
+                #Check if we've been rate limited, and if so, wait a second and try again
+                while True:
+                    response = requests.post(url, json=payload, headers=refreshHeaders)
+                    data = json.loads(response.text)
+                    if data == {'statusCode': 429, 'error': 'Too Many Requests', 'message': 'Max 120 credits in 60s reached, Detected tier 1, Blocked by rule ID 2. Please register for an API key by creating a free account at https://dashboard.reservoir.tools to increase your rate limit.'}:
+                        await asyncio.sleep(1)
+                    else:
+                        break
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(sales):
@@ -347,12 +373,14 @@ async def track():
             else:
                 token_name = token_name + " #"+ token_id[-6:].lstrip('0')
             image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
-            response_code = 404
             wait_time = 60
+            #try to get the image url
+            response = requests.get(image_url, headers=headers)
+            response_code = response.status_code
             while response_code != 200 and wait_time > 0:
+                await asyncio.sleep(60)
                 response = requests.get(image_url, headers=headers)
                 response_code = response.status_code
-                await asyncio.sleep(60)
                 wait_time -= 1
             timestamp = i['timestamp']
             price_symbol = i['price']['currency']['symbol']
@@ -365,8 +393,6 @@ async def track():
             command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_sale_hash'".format(latest_sale_hash)
             cur.execute(command)
             conn.commit()
-            await asyncio.sleep(1)
-            #We'll pause for a second so we don't get rate limited
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(offers):
@@ -397,10 +423,17 @@ async def track():
                 await listings_channel.send(embed=embed)
             else:
                 token_id = i['criteria']['data']['token']['tokenId']
-                #Get info on the token
-                url = "https://api-arbitrum.reservoir.tools/tokens/v6?tokens=0x47a91457a3a1f700097199fd63c039c4784384ab%3A"+token_id
-                response = requests.get(url, headers=headers)
-                data = json.loads(response.text)
+                #Check if we've been rate limited, and if so, wait a second and try again
+                while True:
+                    #Get info on the token
+                    url = "https://api-arbitrum.reservoir.tools/tokens/v6?tokens=0x47a91457a3a1f700097199fd63c039c4784384ab%3A"+token_id
+                    response = requests.get(url, headers=headers)
+                    data = json.loads(response.text)
+
+                    if data == {'statusCode': 429, 'error': 'Too Many Requests', 'message': 'Max 120 credits in 60s reached, Detected tier 1, Blocked by rule ID 2. Please register for an API key by creating a free account at https://dashboard.reservoir.tools to increase your rate limit.'}:
+                        await asyncio.sleep(1)
+                    else:
+                        break
                 collection_name = data['tokens'][0]['token']['collection']['name']
                 token_name, token_artist = collection_name.rsplit(" by ", 1)
                 if token_id[-6:].lstrip('0') == "":
@@ -408,12 +441,14 @@ async def track():
                 else:
                     token_name = token_name + " #"+ token_id[-6:].lstrip('0')
                 image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
-                response_code = 404
                 wait_time = 60
+                #try to get the image url
+                response = requests.get(image_url, headers=headers)
+                response_code = response.status_code
                 while response_code != 200 and wait_time > 0:
+                    await asyncio.sleep(60)
                     response = requests.get(image_url, headers=headers)
                     response_code = response.status_code
-                    await asyncio.sleep(60)
                     wait_time -= 1
                 owner_address = data['tokens'][0]['token']['owner']
                 #Get info on the current owner
@@ -425,8 +460,6 @@ async def track():
             command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_offer_id'".format(latest_offer_id)
             cur.execute(command)
             conn.commit()
-            await asyncio.sleep(1)
-            #We'll pause for a second so we don't get rate limited
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(listings):
@@ -441,10 +474,18 @@ async def track():
             timestamp_str = i['createdAt']
             timestamp_dt = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S.%fZ")
             timestamp = int(timestamp_dt.timestamp())
-            #Get info on the token
-            url = "https://api-arbitrum.reservoir.tools/tokens/v6?tokens=0x47a91457a3a1f700097199fd63c039c4784384ab%3A"+token_id
-            response = requests.get(url, headers=headers)
-            data = json.loads(response.text)
+            #Check if we've been rate limited, and if so, wait a second and try again
+            while True:
+                #Get info on the token
+                url = "https://api-arbitrum.reservoir.tools/tokens/v6?tokens=0x47a91457a3a1f700097199fd63c039c4784384ab%3A"+token_id
+                response = requests.get(url, headers=headers)
+                data = json.loads(response.text)
+
+                if data == {'statusCode': 429, 'error': 'Too Many Requests', 'message': 'Max 120 credits in 60s reached, Detected tier 1, Blocked by rule ID 2. Please register for an API key by creating a free account at https://dashboard.reservoir.tools to increase your rate limit.'}:
+                    await asyncio.sleep(1)
+                else:
+                    break
+
             if data['tokens'] == []:
                 continue
             collection_name = data['tokens'][0]['token']['collection']['name']
@@ -454,12 +495,14 @@ async def track():
             else:
                 token_name = token_name + " #"+ token_id[-6:].lstrip('0')
             image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
-            response_code = 404
             wait_time = 60
+            #try to get the image url
+            response = requests.get(image_url, headers=headers)
+            response_code = response.status_code
             while response_code != 200 and wait_time > 0:
+                await asyncio.sleep(60)
                 response = requests.get(image_url, headers=headers)
                 response_code = response.status_code
-                await asyncio.sleep(60)
                 wait_time -= 1
             owner_address = data['tokens'][0]['token']['owner']
             #Get info on the current owner
@@ -471,8 +514,6 @@ async def track():
             command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_listing_id'".format(latest_listing_id)
             cur.execute(command)
             conn.commit()
-            await asyncio.sleep(1)
-            #We'll pause for a second so we don't get rate limited
 
         cur.close()
         conn.commit()

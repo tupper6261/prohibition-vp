@@ -135,13 +135,20 @@ async def track():
 
         #'Continuation' refers to pagination within the API responses
         while continuation != None and not exit_flag:
-            #If it's our first time through the loop, we leave off the continuation param
-            if continuation == '':
-                url = "https://api-arbitrum.reservoir.tools/transfers/v3?contract=0x47A91457a3a1f700097199Fd63c039c4784384aB&limit=100"
-            else:
-                url = "https://api-arbitrum.reservoir.tools/transfers/v3?contract=0x47A91457a3a1f700097199Fd63c039c4784384aB&limit=100&continuation="+continuation
-            response = requests.get(url, headers=headers)
-            data = json.loads(response.text)
+            #Check if we've been rate limited, and if so, wait a second and try again
+            while True:
+                #If it's our first time through the loop, we leave off the continuation param
+                if continuation == '':
+                    url = "https://api-arbitrum.reservoir.tools/transfers/v3?contract=0x47A91457a3a1f700097199Fd63c039c4784384aB&limit=100"
+                else:
+                    url = "https://api-arbitrum.reservoir.tools/transfers/v3?contract=0x47A91457a3a1f700097199Fd63c039c4784384aB&limit=100&continuation="+continuation
+                response = requests.get(url, headers=headers)
+                data = json.loads(response.text)
+
+                if data == {'statusCode': 429, 'error': 'Too Many Requests', 'message': 'Max 120 credits in 60s reached, Detected tier 1, Blocked by rule ID 2. Please register for an API key by creating a free account at https://dashboard.reservoir.tools to increase your rate limit.'}:
+                    await asyncio.sleep(1)
+                else:
+                    break
 
             #Go through all the transfers on the contract looking for ones coming from the 0x0 address (mint events)
             for i in data['transfers']:
@@ -155,9 +162,6 @@ async def track():
                         mints.append(i)
 
             continuation = data['continuation']
-
-            #We'll pause for a second so we don't get rate limited
-            await asyncio.sleep(1)
 
         '''
 
@@ -289,17 +293,22 @@ async def track():
                 #Call the OpenSea refresh metadata endpoint and get the newly rendered image updated
                 url = "https://api.opensea.io/v2/chain/arbitrum/contract/0x47A91457a3a1f700097199Fd63c039c4784384aB/nfts/" + token_id + "/refresh"
                 response = requests.post(url, headers=OSheaders)
-                await asyncio.sleep(1)
                 #We'll pause for a second so we don't get rate limited
+                await asyncio.sleep(1)
                 url = "https://api-arbitrum.reservoir.tools/tokens/refresh/v1"
                 payload = {
                     "liquidityOnly": False,
                     "overrideCoolDown": False,
                     "token": "0x47A91457a3a1f700097199Fd63c039c4784384aB:" + token_id
                 }
-                response = requests.post(url, json=payload, headers=refreshHeaders)
-                await asyncio.sleep(1)
-                #We'll pause for a second so we don't get rate limited
+                #Check if we've been rate limited, and if so, wait a second and try again
+                while True:
+                    response = requests.post(url, json=payload, headers=refreshHeaders)
+                    data = json.loads(response.text)
+                    if data == {'statusCode': 429, 'error': 'Too Many Requests', 'message': 'Max 120 credits in 60s reached, Detected tier 1, Blocked by rule ID 2. Please register for an API key by creating a free account at https://dashboard.reservoir.tools to increase your rate limit.'}:
+                        await asyncio.sleep(1)
+                    else:
+                        break
 
         '''
 
