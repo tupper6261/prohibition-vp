@@ -433,7 +433,7 @@ async def track():
                 embed = discord.Embed(title=f"{collection_name} by {collection_artist}", description=f"{collection_name} received {offer_quantity} collection offer(s) of {offer_price} {offer_symbol} at <t:{timestamp}:f>.\n\n**Offer Maker:**\n[{maker_handle}]({maker_profile})\n\nhttps://prohibition.art/project/{project_slug}")
                 embed.set_image(url=image_url)
                 #If this is the h+c collection
-                if collection_id == 100:
+                if int(collection_id) == 100:
                     await hc_offers_channel.send(embed=embed)
                 else:
                     await offers_channel.send(embed=embed)
