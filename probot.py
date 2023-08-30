@@ -18,6 +18,7 @@ DATABASE_TOKEN = os.getenv('DATABASE_TOKEN')
 BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
 ALCHEMY_MAINNET_API_KEY = os.getenv('ALCHEMY_MAINNET_API_KEY')
 RESERVOIR_API_KEY = os.getenv('RESERVOIR_API_KEY')
+VP_RESERVOIR_API_KEY = os.getenv('VP_RESERVOIR_API_KEY')
 OPENSEA_API_KEY = os.getenv('OPENSEA_API_KEY')
 prohibitionContract = "0x47A91457a3a1f700097199Fd63c039c4784384aB"
 
@@ -159,13 +160,13 @@ async def track():
 
         headers = {
             "accept": "*/*",
-            "x-api-key": RESERVOIR_API_KEY
+            "x-api-key": VP_RESERVOIR_API_KEY
         }
 
         refreshHeaders = {
             "accept": "*/*",
             "content-type": "application/json",
-            "x-api-key": RESERVOIR_API_KEY
+            "x-api-key": VP_RESERVOIR_API_KEY
         }
 
         OSheaders = {
@@ -273,7 +274,6 @@ async def track():
                     break
 
             #Go through all the transfers on the contract looking for ones that have a price associated with them (sale events)
-            print (data)
             for i in data['orders']:
                 listing_id = i['id']
                 #Once we reach the last one we posted, we can stop calling the API and stop adding the events to our list
