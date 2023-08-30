@@ -273,6 +273,7 @@ async def track():
                     break
 
             #Go through all the transfers on the contract looking for ones that have a price associated with them (sale events)
+            print (data)
             for i in data['orders']:
                 listing_id = i['id']
                 #Once we reach the last one we posted, we can stop calling the API and stop adding the events to our list
