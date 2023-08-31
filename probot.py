@@ -241,6 +241,7 @@ async def track():
             #Go through all the transfers on the contract looking for ones that have a price associated with them (sale events)
             for i in data['orders']:
                 offer_id = i['id']
+                print (offer_id)
                 #Once we reach the last one we posted, we can stop calling the API and stop adding the events to our list
                 if offer_id == latest_offer_id:
                     exit_flag = True
@@ -396,6 +397,8 @@ async def track():
             cur.execute(command)
             conn.commit()
 
+        print ("in offer loop")
+
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(offers):
             #Get information on the maker of the offer
@@ -405,6 +408,7 @@ async def track():
             offer_price = i['price']['amount']['decimal']
             offer_symbol = i['price']['currency']['symbol']
             latest_offer_id = i['id']
+            print (latest_offer_id)
             timestamp_str = i['createdAt']
             timestamp_dt = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S.%fZ")
             timestamp = int(timestamp_dt.timestamp())
