@@ -241,7 +241,6 @@ async def track():
             #Go through all the transfers on the contract looking for ones that have a price associated with them (sale events)
             for i in data['orders']:
                 offer_id = i['id']
-                print (offer_id)
                 #Once we reach the last one we posted, we can stop calling the API and stop adding the events to our list
                 if offer_id == latest_offer_id:
                     exit_flag = True
@@ -397,8 +396,6 @@ async def track():
             cur.execute(command)
             conn.commit()
 
-        print ("in offer loop")
-
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(offers):
             #Get information on the maker of the offer
@@ -408,16 +405,15 @@ async def track():
             offer_price = i['price']['amount']['decimal']
             offer_symbol = i['price']['currency']['symbol']
             latest_offer_id = i['id']
-            print (latest_offer_id)
             timestamp_str = i['createdAt']
             timestamp_dt = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S.%fZ")
             timestamp = int(timestamp_dt.timestamp())
             #if this is a collection offer
             if i['criteria']['kind'] == "collection":
                 collection_id_base = i['criteria']['data']['collection']['id'].split(":")[1]
-                collection_id = str(int(collection_id_base)/1000000)
+                collection_id = int(int(collection_id_base)/1000000)
                 offer_quantity = i['quantityRemaining']
-                url = "https://prohibition.art/api/project/0x47A91457a3a1f700097199Fd63c039c4784384aB-"+collection_id
+                url = "https://prohibition.art/api/project/0x47A91457a3a1f700097199Fd63c039c4784384aB-"+str(collection_id)
                 response = requests.get(url, headers=headers)
                 data = json.loads(response.text)
                 collection_name = data['name']
@@ -427,7 +423,7 @@ async def track():
                 embed = discord.Embed(title=f"{collection_name} by {collection_artist}", description=f"{collection_name} received {offer_quantity} collection offer(s) of {offer_price} {offer_symbol} at <t:{timestamp}:f>.\n\n**Offer Maker:**\n[{maker_handle}]({maker_profile})\n\nhttps://prohibition.art/project/{project_slug}")
                 embed.set_image(url=image_url)
                 #If this is the h+c collection
-                if int(collection_id) == 100:
+                if collection_id == 100:
                     await hc_offers_channel.send(embed=embed)
                 else:
                     await offers_channel.send(embed=embed)
