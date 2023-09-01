@@ -160,13 +160,13 @@ async def track():
 
         headers = {
             "accept": "*/*",
-            "x-api-key": VP_RESERVOIR_API_KEY
+            "x-api-key": RESERVOIR_API_KEY
         }
 
         refreshHeaders = {
             "accept": "*/*",
             "content-type": "application/json",
-            "x-api-key": VP_RESERVOIR_API_KEY
+            "x-api-key": RESERVOIR_API_KEY
         }
 
         OSheaders = {
