@@ -284,7 +284,7 @@ async def track():
                 #Once we reach the last one we posted, we can stop calling the API and stop adding the events to our list
                 #Additionally, sometimes a listing seems to disappear from Reservoir's results. So if that happens to our latest listing, it ends up starting from the beginning of the contract.
                 #So we're also going to limit the results to listings less than 60 minutes old. Which should still catch everything, but limit the amount of duplicates when that happens
-                if listing_id == latest_listing_id or (datetime.utcnow() - datetime.strptime(i['originatedAt'], '%Y-%m-%dT%H:%M:%S.%fZ')) > timedelta(minutes = 60):
+                if listing_id == latest_listing_id or (i['originatedAt'] != None and ((datetime.utcnow() - datetime.strptime(i['originatedAt'], '%Y-%m-%dT%H:%M:%S.%fZ')) > timedelta(minutes = 60))):
                     exit_flag = True
                     break
                 else:
