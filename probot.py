@@ -144,7 +144,7 @@ async def updateCalendar():
                     date = int(date.timestamp())
                     currentTime = int(time.time())
                     if date > currentTime:
-                        events.append((data, projectID, datetimeDate))
+                        events.append((data, projectID, datetimeDate, date))
             else:
                 response_404 += 1
             projectID += 1
@@ -184,14 +184,14 @@ async def updateCalendar():
                 data = json.loads(response.text)
 
                 if response.status_code == 200:
-                    cur.execute("insert into prohibitionupcomingprojects (project_ID, discord_event_id, release_timestamp) values ({0}, {1}, {2})".format(event[1], int(data['id']), event[2]))
+                    cur.execute("insert into prohibitionupcomingprojects (project_ID, discord_event_id, release_timestamp) values ({0}, {1}, {2})".format(event[1], int(data['id']), event[3]))
                     conn.commit()
                 else:
                     print(f"Failed to create event '{projectName}'. Reason: {response.text}")
                     
             else:
                 if results[0][2] != event[2]:
-                    cur.execute("update prohibitionupcomingprojects set release_timestamp = {0} where project_ID = {1}".format(event[2], event[1]))
+                    cur.execute("update prohibitionupcomingprojects set release_timestamp = {0} where project_ID = {1}".format(event[3], event[1]))
                     conn.commit()
             cur.close()
             conn.commit()
