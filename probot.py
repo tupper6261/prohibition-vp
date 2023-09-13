@@ -11,6 +11,7 @@ import psycopg2
 import json
 import time
 import sys
+import base64
 
 load_dotenv()
 
@@ -68,6 +69,7 @@ async def on_ready():
     await message.edit(content="Tap the below buttons to add/remove the corresponding role:", view=MyView())
     while True:
         await track()
+        await updateCalendar()
         await asyncio.sleep(300)
 
 # List of role names that you want to ignore
@@ -115,7 +117,91 @@ async def getUser(address):
 
     return owner_handle, owner_profile
 
+async def updateCalendar():
+    try:
+        headers = {
+            "accept": "*/*",
+            "content-type": "application/json"
+        }
 
+        events = []
+        projectID = 170
+        response_code = 200
+        response_404 = 0
+        while response_404 < 5:
+            url = "https://prohibition.art/api/project/0x47A91457a3a1f700097199Fd63c039c4784384aB-"+str(projectID)
+            response = requests.get(url, headers=headers)
+            data = json.loads(response.text)
+            response_code = response.status_code
+            if response_code != 404:
+                response_404 = 0
+                date = data['startTime']
+                if date == None:
+                    date = data['auctionStartTime']
+                if date != None:
+                    datetimeDate = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ")
+                    date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ")
+                    date = int(date.timestamp())
+                    currentTime = int(time.time())
+                    if date > currentTime:
+                        events.append((data, projectID, datetimeDate))
+            else:
+                response_404 += 1
+            projectID += 1
+
+        for event in events:
+            image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + str(event[1] * 1000000) + ".png"
+            image_base64 = base64.b64encode(requests.get(image_url).content)
+            projectName = event[0]['name']
+            projectArtist = event[0]['artistName']
+            projectDescription = event[0]['description']
+            projectURL = "https://prohibition.art/project/" + event[0]['slug']
+            conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
+            cur = conn.cursor()
+            cur.execute("select * from prohibitionupcomingprojects where project_ID = {}".format(event[1]))
+            results = cur.fetchall()
+            if results == []:
+                DISCORD_API_ENDPOINT = "https://discord.com/api/v10/guilds/1101580614945222708/scheduled-events"
+
+                start_time = event[2].isoformat()
+                end_time = (event[2] + timedelta(hours=1)).isoformat()
+
+                payload = {
+                    "name": projectName + " by " + projectArtist,
+                    "entity_type": 3,  # External Event
+                    "scheduled_start_time": start_time,
+                    "scheduled_end_time": (event[2] + timedelta(hours=1)).isoformat(),
+                    "entity_metadata": {"location": projectURL},
+                    "privacy_level": 2, #Private to guild members
+                    "image": "data:image/png;base64," + image_base64.decode('utf-8'),
+                }
+
+                headers = {
+                    "Authorization": f"Bot {BOT_TOKEN}",
+                    "Content-Type": "application/json"
+                }
+                response = requests.post(DISCORD_API_ENDPOINT, json=payload, headers=headers)
+                data = json.loads(response.text)
+
+                if response.status_code == 200:
+                    cur.execute("insert into prohibitionupcomingprojects (project_ID, discord_event_id, release_timestamp) values ({0}, {1}, {2})".format(event[1], int(data['id']), event[2]))
+                    conn.commit()
+                else:
+                    print(f"Failed to create event '{projectName}'. Reason: {response.text}")
+                    
+            else:
+                if results[0][2] != event[2]:
+                    cur.execute("update prohibitionupcomingprojects set release_timestamp = {0} where project_ID = {1}".format(event[2], event[1]))
+                    conn.commit()
+            cur.close()
+            conn.commit()
+            conn.close()
+    #If an error occurs, we're gonna log it and pause for a minute, then try again
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        line_number = exc_tb.tb_lineno
+        print(f"An error occurred: {e} at line {line_number}")
+        await asyncio.sleep(60)
 
 async def track():
     try:
