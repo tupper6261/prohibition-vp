@@ -125,7 +125,7 @@ async def updateCalendar():
         }
 
         events = []
-        projectID = 170
+        projectID = 0
         response_code = 200
         response_404 = 0
         while response_404 < 5:
