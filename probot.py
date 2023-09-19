@@ -223,6 +223,7 @@ async def updateVotes():
     verified_artist_role_members = [member for member in guild.members if verified_artist_role in member.roles]
     verified_artist_role_member_count = len(verified_artist_role_members)
     for vote in results:
+        print (vote)
         channel = discord.utils.get(guild.channels, id=vote[2])
         message = await channel.fetch_message(vote[3])
         message_content, is_vote_finished = await updateVoteMessage(vote[0], verified_artist_role_member_count)
