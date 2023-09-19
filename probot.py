@@ -343,7 +343,7 @@ async def artistverificationvote(ctx, walletaddress: Option(str, "What is the ap
     latest_vote_end = vote_begin + VERIFICATION_MAXIMUM_VOTE_DURATION
     
     # Get today's date in the format dateMonthYear
-    todays_date = datetime.datetime.now().strftime('%d%b%Y')
+    todays_date = datetime.now().strftime('%d%b%Y')
 
     channel_name = "vote-" + artist_prohibition_handle + "-" + todays_date
 
