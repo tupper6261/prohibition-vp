@@ -334,7 +334,7 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
 
 #Slash command to start a new artist verification vote
 @bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Start a new artist verification vote")
-async def artistverificationvote(ctx, walletaddress: Option(str, "What is the applicant's wallet address?"), discordUsername: Option(discord.Member, "What is the Discord account of the user applying for verification?")=None, xhandle: Option(str, "What is the X handle (without the @) of the user applying for verification?")=None, ighandle: Option(str, "What is the Instagram handle (without the @) of the user applying for verification?")=None, website: Option(str, "What is the applicant's website?")=None):
+async def artistverificationvote(ctx, walletaddress: Option(str, "What is the applicant's wallet address?"), discordusername: Option(discord.Member, "What is the Discord account of the user applying for verification?")=None, xhandle: Option(str, "What is the X handle (without the @) of the user applying for verification?")=None, ighandle: Option(str, "What is the Instagram handle (without the @) of the user applying for verification?")=None, website: Option(str, "What is the applicant's website?")=None):
     guild = discord.utils.get(bot.guilds, id=PROHIBITION_GUILD_ID)
     artist_prohibition_handle, artist_prohibition_profile = await getUser(walletaddress)
 
@@ -373,12 +373,12 @@ async def artistverificationvote(ctx, walletaddress: Option(str, "What is the ap
     message_content += "\n**Wallet Address: **" + walletaddress
     message_content += "\n**Arbiscan Transaction History: **[" + walletaddress[:5] + "..." + walletaddress[len(walletaddress)-5:] + "](https://arbiscan.io/address/" + walletaddress + ")"
     message_content += "\n**Etherscan Transaction History: **[" + walletaddress[:5] + "..." + walletaddress[len(walletaddress)-5:] + "](https://etherscan.io/address/" + walletaddress + ")"
-    if discordUsername:
-        message_content += "\n**Discord Account: **" + discordUsername.mention
+    if discordusername:
+        message_content += "\n**Discord Account: **" + discordusername.mention
     if xhandle:
-        message_content += "\n**X Profile: **[" + XHandle + "](https://twitter.com/" + XHandle +")"
+        message_content += "\n**X Profile: **[" + xhandle + "](https://twitter.com/" + xhandle +")"
     if ighandle:
-        message_content += "\n**Instagram Profile: **[" + IGHandle + "](https://instagram.com/" + IGHandle +")"
+        message_content += "\n**Instagram Profile: **[" + ighandle + "](https://instagram.com/" + ighandle +")"
     if website:
         message_content += "\n**Personal Website: **" + website
     
