@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ui import Button, View, Select
+from discord.commands import Option
 import os
 from dotenv import load_dotenv
 import asyncio
@@ -22,6 +23,34 @@ RESERVOIR_API_KEY = os.getenv('RESERVOIR_API_KEY')
 VP_RESERVOIR_API_KEY = os.getenv('VP_RESERVOIR_API_KEY')
 OPENSEA_API_KEY = os.getenv('OPENSEA_API_KEY')
 prohibitionContract = "0x47A91457a3a1f700097199Fd63c039c4784384aB"
+
+PROHIBITION_GUILD_ID = 1101580614945222708
+ARTIST_VERIFICATION_CATEGORY_ID = 1151907551529664593
+VERIFIED_ARTIST_ROLE_ID = 1151597107225043036
+VERIFIED_ROLE_ID = 1101595354085990560
+PROHIBITION_TEAM_ROLE_ID = 1101586848213651556
+
+#Setting contants for verification voting here so they can be easily updated in the future
+'''
+Acceptance Criteria
+
+- A simple majority determines if a vote passes or fails
+    - > 50% in favor passes the motion
+    - < 50% in favor denied the motion
+- The motion fails if less than 10% of verified artists vote
+- The maximum duration is 1 week
+- The minimum duration is 48 hours
+- The vote fails if there is a tie
+'''
+VERIFICATION_ACCEPTANCE_CRITERIA = "**Acceptance Criteria:**\n- A simple majority determines if a vote passes or fails\n    - > 50% in favor passes the motion\n    - < 50% in favor denied the motion\n- The motion fails if less than 10% of verified artists vote\n- The maximum duration is 1 week\n- The minimum duration is 48 hours\n- The vote fails if there is a tie"
+VERIFICATION_MAJORITY = .5
+VERIFICATION_MAJORITY_STRING = "50%"
+VERIFICATION_QUORUM = .1
+VERIFICATION_QUORUM_STRING = "10%"
+VERIFICATION_MINIMUM_VOTE_DURATION_STRING = "48 hours"
+VERIFICATION_MINIMUM_VOTE_DURATION = 172800 #48 hours --> 172800 seconds
+VERIFICATION_MAXIMUM_VOTE_DURATION_STRING = "1 week"
+VERIFICATION_MAXIMUM_VOTE_DURATION = 604800 #1 week --> 604800 seconds
 
 DELETE_LINKS = False
 
@@ -60,16 +89,98 @@ class MyView(discord.ui.View):  # Create a class called MyView that subclasses d
             await interaction.user.add_roles(role)
             await interaction.response.send_message(f"I have successfully given you the {role.name} role.", ephemeral=True)
 
+class VoteView(discord.ui.View):  # Create a class called MyView that subclasses discord.ui.View
+    def __init__(self):
+        super().__init__(timeout=None)  # timeout of the view must be set to None
+
+    @discord.ui.button(label="Vote For", style=discord.ButtonStyle.primary)  # Create a button with the label "Vote For" with color Blurple
+    async def vote_for_button_callback(self, button, interaction):
+        verified_artist_role = discord.utils.get(interaction.guild.roles, id=VERIFIED_ARTIST_ROLE_ID)
+        verified_artist_role_members = [member for member in interaction.guild.members if verified_artist_role in member.roles]
+        verified_artist_role_member_count = len(verified_artist_role_members)
+        if verified_artist_role in interaction.user.roles:
+            message_id = interaction.message.id  # Get the message ID
+
+            conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
+            cur = conn.cursor()
+            cur.execute("select * from prohibition_verification_voting_channels where message_id = {0}".format(message_id))
+            results = cur.fetchall()
+            vote_id = results[0][0]
+            #add the vote to the vote log
+            cur.execute("insert into * from prohibition_verification_vote_log (vote_id, discord_user_id, approved, vote_timestamp) values ({0}, {1}, true, {2})".format(vote_id, interaction.user.id, int(time.time())))
+            conn.commit()
+            #either add the user to the vote_summary table or edit their response
+            cur.execute("select * from prohibition_verification_vote_summary where vote_id = {0} and discord_user_id = {1}".format(vote_id, interaction.user.id))
+            results = cur.fetchall()
+            if results == []:
+                cur.execute("insert into prohibition_verification_vote_summary (vote_id, discord_user_id, approved) values ({0}, {1}, true)".format(vote_id, interaction.user.id))
+                conn.commit()
+            else:
+                cur.execute("update prohibition_verification_vote_summary set approved = true where vote_id = {0} and discord_user_id = {1}".format(vote_id, interaction.user.id))
+                conn.commit()
+            cur.close()
+            conn.commit()
+            conn.close()
+
+            # Edit the original message
+            message_content, is_vote_finished = await updateVoteMessage(vote_id, verified_artist_role_member_count)
+            if is_vote_finished:
+                await interaction.edit_original_message(view = None, content = message_content)
+            else:
+                await interaction.edit_original_message(content = message_content)
+        else:
+            await interaction.response.send_message("Only currently-verified artists are allowed to vote; this vote has not been recorded. If you feel you are receiving this message in error, please <#1101604838137143406> and we'll get back with you ASAP!", ephemeral=True)
+
+    @discord.ui.button(label="Vote Against", style=discord.ButtonStyle.primary)  # Create a button with the label "Vote Against" with color Blurple
+    async def vote_against_button_callback(self, button, interaction):
+        verified_artist_role = discord.utils.get(interaction.guild.roles, id=VERIFIED_ARTIST_ROLE_ID)
+        verified_artist_role_members = [member for member in interaction.guild.members if verified_artist_role in member.roles]
+        verified_artist_role_member_count = len(verified_artist_role_members)
+        if verified_artist_role in interaction.user.roles:
+            message_id = interaction.message.id  # Get the message ID
+
+            conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
+            cur = conn.cursor()
+            cur.execute("select * from prohibition_verification_voting_channels where message_id = {0}".format(message_id))
+            results = cur.fetchall()
+            vote_id = results[0][0]
+            #add the vote to the vote log
+            cur.execute("insert into * from prohibition_verification_vote_log (vote_id, discord_user_id, approved, vote_timestamp) values ({0}, {1}, false, {2})".format(vote_id, interaction.user.id, int(time.time())))
+            conn.commit()
+            #either add the user to the vote_summary table or edit their response
+            cur.execute("select * from prohibition_verification_vote_summary where vote_id = {0} and discord_user_id = {1}".format(vote_id, interaction.user.id))
+            results = cur.fetchall()
+            if results == []:
+                cur.execute("insert into prohibition_verification_vote_summary (vote_id, discord_user_id, approved) values ({0}, {1}, false)".format(vote_id, interaction.user.id))
+                conn.commit()
+            else:
+                cur.execute("update prohibition_verification_vote_summary set approved = false where vote_id = {0} and discord_user_id = {1}".format(vote_id, interaction.user.id))
+                conn.commit()
+            cur.close()
+            conn.commit()
+            conn.close()
+
+            # Edit the original message
+            message_content, is_vote_finished = await updateVoteMessage(vote_id, verified_artist_role_member_count)
+            if is_vote_finished:
+                await interaction.edit_original_message(view = None, content = message_content)
+            else:
+                await interaction.edit_original_message(content = message_content)
+        else:
+            await interaction.response.send_message("Only currently-verified artists are allowed to vote; this vote has not been recorded. If you feel you are receiving this message in error, please <#1101604838137143406> and we'll get back with you ASAP!", ephemeral=True)
+
 @bot.event
 async def on_ready():
-    guild = discord.utils.get(bot.guilds, id=1101580614945222708)
+    guild = discord.utils.get(bot.guilds, id=PROHIBITION_GUILD_ID)
     channel = discord.utils.get(guild.channels, id=1129038551066103959)
+    #Role message
     message_id = 1129129885928005874
     message = await channel.fetch_message(message_id)
     await message.edit(content="Tap the below buttons to add/remove the corresponding role:", view=MyView())
     while True:
         await track()
         await updateCalendar()
+        await updateVotes()
         await asyncio.sleep(300)
 
 # List of role names that you want to ignore
@@ -95,6 +206,208 @@ async def on_message(message):
             else:
                 await message.delete()
 '''
+
+async def updateVotes():
+    #Get the current active votes
+    conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM prohibition_verification_voting_channels WHERE active_vote = true")
+    results = cur.fetchall()
+    cur.close()
+    conn.commit()
+    conn.close()
+    guild = discord.utils.get(bot.guilds, id=PROHIBITION_GUILD_ID)
+    verified_artist_role = discord.utils.get(guild.roles, id=VERIFIED_ARTIST_ROLE_ID)
+    verified_artist_role_members = [member for member in guild.members if verified_artist_role in member.roles]
+    verified_artist_role_member_count = len(verified_artist_role_members)
+    for vote in results:
+        channel = discord.utils.get(guild.channels, id=vote[2])
+        message = await channel.fetch_message(vote[3])
+        message_content, is_vote_finished = await updateVoteMessage(vote[0], verified_artist_role_member_count)
+        if is_vote_finished:
+            await message.edit(content = message_content, view = None)
+        else:
+            await message.edit(content = message_content)
+
+
+async def updateVoteMessage(vote_id, number_of_verified_artists):
+    #Get the current vote stats
+    conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) FROM prohibition_verification_vote_summary WHERE approved = true and vote_id = {0}".format(vote_id))
+    votes_for = cur.fetchall()[0][0]
+    cur.execute("SELECT COUNT(*) FROM prohibition_verification_vote_summary WHERE approved = false and vote_id = {0}".format(vote_id))
+    votes_against = cur.fetchall()[0][0]
+    cur.execute("SELECT * FROM prohibition_verification_voting_channels WHERE vote_id = {0}".format(vote_id))
+    results = cur.fetchall()
+    earliest_vote_end = results[0][4]
+    latest_vote_end = results[0][5]
+    cur.close()
+    conn.commit()
+    conn.close()
+
+    #Get the current timestamp
+    current_time = int(time.time())
+    #See if the minimum vote time has passed
+    if earliest_vote_end > current_time:
+        minimum_duration_reached = False
+    else:
+        minimum_duration_reached = True
+    #See if the maximum vote time has passed
+    if latest_vote_end > current_time:
+        maximum_duration_reached = False
+    else:
+        maximum_duration_reached =True
+    #See if a quorum has been reached
+    total_vote_percent = round(((float(votes_for) + float(votes_against))/float(number_of_verified_artists)), 4) * 100
+    if total_vote_percent < number_of_verified_artists * VERIFICATION_QUORUM:
+        quorum_reached = False
+    else:
+        quorum_reached = True
+    #See if a majority vote has been reached
+    votes_for_percent = round((float(votes_for)/float(number_of_verified_artists)), 4) * 100
+    votes_against_percent = round((float(votes_against)/float(number_of_verified_artists)), 4) * 100
+    if votes_for_percent > VERIFICATION_MAJORITY or votes_against_percent > VERIFICATION_MAJORITY:
+        majority_vote_reached = True
+    else:
+        majority_vote_reached = False
+
+    #Different vote states get different messages
+    if not minimum_duration_reached:
+        is_vote_finished = False
+        message_content = "\n\n**Current Vote Status:**"
+        message_content += "\n{0} votes for".format(votes_for)
+        message_content += "\n{0} votes against".format(votes_against)
+        message_content += "\n{0}}% of Verified Artists have voted - a quorum has ".format(str(total_vote_percent))
+        if not quorum_reached:
+            message_content += "not "
+        message_content += "been reached"
+        message_content += "\nVote will close no earlier than <t:" + earliest_vote_end + ":f>"
+        message_content += "\nVote will continue until a " + VERIFICATION_MAJORITY_STRING + " majority has been reached or until <t:" + latest_vote_end + ":f>, whichever is earlier"
+    else:
+        if majority_vote_reached:
+            is_vote_finished = True
+            message_content = "\n\n**Vote Results:**"
+            conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
+            cur = conn.cursor()
+            if votes_for > votes_against:
+                message_content = "\n\nApplication for verification was approved by majority vote on <t:" + current_time + ":f>."
+                cur.execute("update prohibition_verification_voting_channels set active_vote = false and getting_verified = true where vote_id = {0}".format(vote_id))
+            else:
+                message_content = "\n\nApplication for verification was denied by majority vote on <t:" + current_time + ":f>."
+                cur.execute("update prohibition_verification_voting_channels set active_vote = false and getting_verified = false where vote_id = {0}".format(vote_id))
+            conn.commit()
+            cur.close()
+            conn.close()
+        else:
+            if maximum_duration_reached:
+                is_vote_finished = True
+                message_content = "\n\n**Vote Results:**"
+                conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
+                cur = conn.cursor()
+                if quorum_reached:
+                    if votes_for > votes_against:
+                        message_content = "\n\nApplication for verification was approved by quorum majority vote after reaching maximum vote duration on <t:" + current_time + ":f>."
+                        cur.execute("update prohibition_verification_voting_channels set active_vote = false and getting_verified = true where vote_id = {0}".format(vote_id))
+                    else:
+                        message_content = "\n\nApplication for verification was denied by quorum majority vote after reaching maximum vote duration on <t:" + current_time + ":f>."
+                        cur.execute("update prohibition_verification_voting_channels set active_vote = false and getting_verified = false where vote_id = {0}".format(vote_id))
+                else:
+                    message_content = "\n\nApplication for verification was denied after reaching maximum vote duration on <t:" + current_time + ":f> without meeting a quorum."
+                    cur.execute("update prohibition_verification_voting_channels set active_vote = false and getting_verified = false where vote_id = {0}".format(vote_id))
+                conn.commit()
+                cur.close()
+                conn.close()
+            else:
+                is_vote_finished = False
+                message_content = "\n\n**Current Vote Status:**"
+                message_content += "\n{0} votes for".format(votes_for)
+                message_content += "\n{0} votes against".format(votes_against)
+                message_content += "\n{0}}% of Verified Artists have voted - a quorum has ".format(str(total_vote_percent))
+                if not quorum_reached:
+                    message_content += "not "
+                message_content += "been reached"
+                message_content += VERIFICATION_MINIMUM_VOTE_DURATION_STRING + " minimum vote time has elapsed."
+                message_content += "\nVote will continue until a " + VERIFICATION_MAJORITY_STRING + " majority has been reached or until <t:" + latest_vote_end + ":f>, whichever is earlier"
+    
+    return message_content, is_vote_finished
+
+#Slash command to start a new artist verification vote
+@bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Start a new artist verification vote")
+async def artistverificationvote(ctx, walletaddress: Option(str, "What is the applicant's wallet address?"), discordUsername: Option(discord.Member, "What is the Discord account of the user applying for verification?")=None, XHandle: Option(str, "What is the X handle (without the @) of the user applying for verification?")=None, IGHandle: Option(str, "What is the Instagram handle (without the @) of the user applying for verification?")=None, website: Option(str, "What is the applicant's website?")=None):
+    guild = discord.utils.get(bot.guilds, id=PROHIBITION_GUILD_ID)
+    artist_prohibition_handle, artist_prohibition_profile = await getUser(walletaddress)
+
+    vote_begin = int(time.time())
+    earliest_vote_end = vote_begin + VERIFICATION_MINIMUM_VOTE_DURATION
+    latest_vote_end = vote_begin + VERIFICATION_MAXIMUM_VOTE_DURATION
+    
+    # Get today's date in the format dateMonthYear
+    todays_date = datetime.datetime.now().strftime('%d%b%Y')
+
+    channel_name = "vote-" + artist_prohibition_handle + "-" + todays_date
+
+    # Define the roles
+    default_role = guild.default_role
+    verified_role = discord.utils.get(guild.roles, id=VERIFIED_ROLE_ID)
+    prohibition_team_role = discord.utils.get(guild.roles, id=PROHIBITION_TEAM_ROLE_ID)
+
+    # Set the overwrites
+    overwrites = {
+        default_role: discord.PermissionOverwrite(read_messages=False),
+        verified_role: discord.PermissionOverwrite(read_messages=True, send_messages=False),
+        prohibition_team_role: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+    }
+
+    # Create the channel
+    channel = await guild.create_text_channel(
+        name=channel_name,
+        category=guild.get_channel(ARTIST_VERIFICATION_CATEGORY_ID),
+        overwrites=overwrites
+    )
+
+    #TODO - write voting message
+    #[display](url)
+    message_title = artist_prohibition_handle + " Verification Vote"
+    message_content = artist_prohibition_handle + " is applying to be a verified artist on the Prohibition platform. Please review their work, accounts, and wallet history below and submit your vote before the deadline.\n\n**Prohibition Profile:** " + artist_prohibition_profile
+    message_content += "\n**Wallet Address: **" + walletaddress
+    message_content += "\n**Arbiscan Transaction History: **[" + walletaddress[:5] + "..." + walletaddress[len(walletaddress)-5:] + "](https://arbiscan.io/address/" + walletaddress + ")"
+    message_content += "\n**Etherscan Transaction History: **[" + walletaddress[:5] + "..." + walletaddress[len(walletaddress)-5:] + "](https://etherscan.io/address/" + walletaddress + ")"
+    if discordUsername:
+        message_content += "\n**Discord Account: **" + discordUsername.mention
+    if XHandle:
+        message_content += "\n**X Profile: **[" + XHandle + "](https://twitter.com/" + XHandle +")"
+    if IGHandle:
+        message_content += "\n**Instagram Profile: **[" + IGHandle + "](https://instagram.com/" + IGHandle +")"
+    if website:
+        message_content += "\n**Personal Website: **" + website
+    
+    message_content +="\n\n" + VERIFICATION_ACCEPTANCE_CRITERIA
+
+    embed = discord.Embed(title=message_title, description=message_content)
+
+    info_message = await channel.send(embed = embed)
+
+    #TODO - create vote status message
+
+    message_content = "\n\n**Current Vote Status:**"
+    message_content += "\n0 votes for"
+    message_content += "\n0 votes against"
+    message_content += "\n0% of Verified Artists have voted"
+    message_content += "\nVote will close no earlier than <t:" + earliest_vote_end + ":f>"
+    message_content += "\nVote will continue until a " + VERIFICATION_MAJORITY_STRING + " majority has been reached or until <t:" + latest_vote_end + ":f>, whichever is earlier"
+
+    embed = discord.Embed(description=message_content)
+
+    voting_message = await channel.send(embed = embed, view = VoteView())
+
+    conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
+    cur = conn.cursor()
+    cur.execute("insert into prohibition_verification_voting_channels (vote_id, artist_wallet, channel_id, message_id, minimum_vote_time, maximum_vote_time) values ({0}, '{1}', {2}, {3}, {4}, {5})".format(vote_begin, walletaddress, channel.id, voting_message.id, earliest_vote_end, latest_vote_end))
+    conn.commit()
+    cur.close()
+    conn.close()
+
 
 async def getUser(address):
     headers = {
