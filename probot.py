@@ -107,7 +107,7 @@ class VoteView(discord.ui.View):  # Create a class called MyView that subclasses
             results = cur.fetchall()
             vote_id = results[0][0]
             #add the vote to the vote log
-            cur.execute("insert into * from prohibition_verification_vote_log (vote_id, discord_user_id, approved, vote_timestamp) values ({0}, {1}, true, {2})".format(vote_id, interaction.user.id, int(time.time())))
+            cur.execute("insert into prohibition_verification_vote_log (vote_id, discord_user_id, approved, vote_timestamp) values ({0}, {1}, true, {2})".format(vote_id, interaction.user.id, int(time.time())))
             conn.commit()
             #either add the user to the vote_summary table or edit their response
             cur.execute("select * from prohibition_verification_vote_summary where vote_id = {0} and discord_user_id = {1}".format(vote_id, interaction.user.id))
@@ -145,7 +145,7 @@ class VoteView(discord.ui.View):  # Create a class called MyView that subclasses
             results = cur.fetchall()
             vote_id = results[0][0]
             #add the vote to the vote log
-            cur.execute("insert into * from prohibition_verification_vote_log (vote_id, discord_user_id, approved, vote_timestamp) values ({0}, {1}, false, {2})".format(vote_id, interaction.user.id, int(time.time())))
+            cur.execute("insert into prohibition_verification_vote_log (vote_id, discord_user_id, approved, vote_timestamp) values ({0}, {1}, false, {2})".format(vote_id, interaction.user.id, int(time.time())))
             conn.commit()
             #either add the user to the vote_summary table or edit their response
             cur.execute("select * from prohibition_verification_vote_summary where vote_id = {0} and discord_user_id = {1}".format(vote_id, interaction.user.id))
@@ -278,7 +278,7 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
         message_content = "\n\n**Current Vote Status:**"
         message_content += "\n{0} votes for".format(votes_for)
         message_content += "\n{0} votes against".format(votes_against)
-        message_content += "\n{0}}% of Verified Artists have voted - a quorum has ".format(str(total_vote_percent))
+        message_content += "\n{0}% of Verified Artists have voted - a quorum has ".format(str(total_vote_percent))
         if not quorum_reached:
             message_content += "not "
         message_content += "been reached"
@@ -323,7 +323,7 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
                 message_content = "\n\n**Current Vote Status:**"
                 message_content += "\n{0} votes for".format(votes_for)
                 message_content += "\n{0} votes against".format(votes_against)
-                message_content += "\n{0}}% of Verified Artists have voted - a quorum has ".format(str(total_vote_percent))
+                message_content += "\n{0}% of Verified Artists have voted - a quorum has ".format(str(total_vote_percent))
                 if not quorum_reached:
                     message_content += "not "
                 message_content += "been reached"
@@ -409,6 +409,8 @@ async def artistverificationvote(ctx, walletaddress: Option(str, "What is the ap
     conn.commit()
     cur.close()
     conn.close()
+
+    await ctx.respond("Vote for " + artist_prohibition_handle + " has been successfully created.", ephemeral = True)
 
 
 async def getUser(address):
