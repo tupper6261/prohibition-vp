@@ -225,11 +225,14 @@ async def updateVotes():
     for vote in results:
         channel = discord.utils.get(guild.channels, id=vote[2])
         message = await channel.fetch_message(vote[3])
+        print (message.id)
         message_content, is_vote_finished = await updateVoteMessage(vote[0], verified_artist_role_member_count)
         embed = discord.Embed(description=message_content)
         if is_vote_finished:
+            print ("here")
             await message.edit(view = None, embed = embed)
         else:
+            print ("or here")
             await message.edit(view = VoteView, embed = embed)
 
 
