@@ -336,6 +336,7 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
 @bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Start a new artist verification vote")
 async def artistverificationvote(ctx, walletaddress: Option(str, "What is the applicant's wallet address?"), discordusername: Option(discord.Member, "What is the Discord account of the user applying for verification?")=None, xhandle: Option(str, "What is the X handle (without the @) of the user applying for verification?")=None, ighandle: Option(str, "What is the Instagram handle (without the @) of the user applying for verification?")=None, website: Option(str, "What is the applicant's website?")=None):
     guild = discord.utils.get(bot.guilds, id=PROHIBITION_GUILD_ID)
+    bot_member = guild.me
     artist_prohibition_handle, artist_prohibition_profile = await getUser(walletaddress)
 
     vote_begin = int(time.time())
@@ -356,7 +357,8 @@ async def artistverificationvote(ctx, walletaddress: Option(str, "What is the ap
     overwrites = {
         default_role: discord.PermissionOverwrite(read_messages=False),
         verified_role: discord.PermissionOverwrite(read_messages=True, send_messages=False),
-        prohibition_team_role: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        prohibition_team_role: discord.PermissionOverwrite(read_messages=True, send_messages=True),
+        bot_member: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_messages=True)
     }
 
     # Create the channel
