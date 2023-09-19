@@ -282,8 +282,8 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
         if not quorum_reached:
             message_content += "not "
         message_content += "been reached"
-        message_content += "\nVote will close no earlier than <t:" + earliest_vote_end + ":f>"
-        message_content += "\nVote will continue until a " + VERIFICATION_MAJORITY_STRING + " majority has been reached or until <t:" + latest_vote_end + ":f>, whichever is earlier"
+        message_content += "\nVote will close no earlier than <t:" + str(earliest_vote_end) + ":f>"
+        message_content += "\nVote will continue until a " + VERIFICATION_MAJORITY_STRING + " majority has been reached or until <t:" + str(latest_vote_end) + ":f>, whichever is earlier"
     else:
         if majority_vote_reached:
             is_vote_finished = True
@@ -291,10 +291,10 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
             conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
             cur = conn.cursor()
             if votes_for > votes_against:
-                message_content = "\n\nApplication for verification was approved by majority vote on <t:" + current_time + ":f>."
+                message_content = "\n\nApplication for verification was approved by majority vote on <t:" + str(current_time) + ":f>."
                 cur.execute("update prohibition_verification_voting_channels set active_vote = false and getting_verified = true where vote_id = {0}".format(vote_id))
             else:
-                message_content = "\n\nApplication for verification was denied by majority vote on <t:" + current_time + ":f>."
+                message_content = "\n\nApplication for verification was denied by majority vote on <t:" + str(current_time) + ":f>."
                 cur.execute("update prohibition_verification_voting_channels set active_vote = false and getting_verified = false where vote_id = {0}".format(vote_id))
             conn.commit()
             cur.close()
@@ -307,13 +307,13 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
                 cur = conn.cursor()
                 if quorum_reached:
                     if votes_for > votes_against:
-                        message_content = "\n\nApplication for verification was approved by quorum majority vote after reaching maximum vote duration on <t:" + current_time + ":f>."
+                        message_content = "\n\nApplication for verification was approved by quorum majority vote after reaching maximum vote duration on <t:" + str(current_time) + ":f>."
                         cur.execute("update prohibition_verification_voting_channels set active_vote = false and getting_verified = true where vote_id = {0}".format(vote_id))
                     else:
-                        message_content = "\n\nApplication for verification was denied by quorum majority vote after reaching maximum vote duration on <t:" + current_time + ":f>."
+                        message_content = "\n\nApplication for verification was denied by quorum majority vote after reaching maximum vote duration on <t:" + str(current_time) + ":f>."
                         cur.execute("update prohibition_verification_voting_channels set active_vote = false and getting_verified = false where vote_id = {0}".format(vote_id))
                 else:
-                    message_content = "\n\nApplication for verification was denied after reaching maximum vote duration on <t:" + current_time + ":f> without meeting a quorum."
+                    message_content = "\n\nApplication for verification was denied after reaching maximum vote duration on <t:" + str(current_time) + ":f> without meeting a quorum."
                     cur.execute("update prohibition_verification_voting_channels set active_vote = false and getting_verified = false where vote_id = {0}".format(vote_id))
                 conn.commit()
                 cur.close()
@@ -328,7 +328,7 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
                     message_content += "not "
                 message_content += "been reached"
                 message_content += VERIFICATION_MINIMUM_VOTE_DURATION_STRING + " minimum vote time has elapsed."
-                message_content += "\nVote will continue until a " + VERIFICATION_MAJORITY_STRING + " majority has been reached or until <t:" + latest_vote_end + ":f>, whichever is earlier"
+                message_content += "\nVote will continue until a " + VERIFICATION_MAJORITY_STRING + " majority has been reached or until <t:" + str(latest_vote_end) + ":f>, whichever is earlier"
     
     return message_content, is_vote_finished
 
@@ -396,8 +396,8 @@ async def artistverificationvote(ctx, walletaddress: Option(str, "What is the ap
     message_content += "\n0 votes for"
     message_content += "\n0 votes against"
     message_content += "\n0% of Verified Artists have voted"
-    message_content += "\nVote will close no earlier than <t:" + earliest_vote_end + ":f>"
-    message_content += "\nVote will continue until a " + VERIFICATION_MAJORITY_STRING + " majority has been reached or until <t:" + latest_vote_end + ":f>, whichever is earlier"
+    message_content += "\nVote will close no earlier than <t:" + str(earliest_vote_end) + ":f>"
+    message_content += "\nVote will continue until a " + VERIFICATION_MAJORITY_STRING + " majority has been reached or until <t:" + str(latest_vote_end) + ":f>, whichever is earlier"
 
     embed = discord.Embed(description=message_content)
 
