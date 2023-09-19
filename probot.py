@@ -264,6 +264,8 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
     #See if a quorum has been reached
     total_vote_percent = round(((float(votes_for) + float(votes_against))/float(number_of_verified_artists)), 4) * 100
     if total_vote_percent < number_of_verified_artists * VERIFICATION_QUORUM:
+        print (total_vote_percent)
+        print (number_of_verified_artists * VERIFICATION_QUORUM)
         quorum_reached = False
     else:
         quorum_reached = True
