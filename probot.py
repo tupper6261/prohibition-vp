@@ -124,10 +124,11 @@ class VoteView(discord.ui.View):  # Create a class called MyView that subclasses
 
             # Edit the original message
             message_content, is_vote_finished = await updateVoteMessage(vote_id, verified_artist_role_member_count)
+            embed = discord.Embed(description=message_content)
             if is_vote_finished:
-                await interaction.edit_original_message(view = None, content = message_content)
+                await interaction.edit_original_message(view = None, embed = embed)
             else:
-                await interaction.edit_original_message(content = message_content)
+                await interaction.edit_original_message(embed = embed)
         else:
             await interaction.response.send_message("Only currently-verified artists are allowed to vote; this vote has not been recorded. If you feel you are receiving this message in error, please <#1101604838137143406> and we'll get back with you ASAP!", ephemeral=True)
 
@@ -162,10 +163,11 @@ class VoteView(discord.ui.View):  # Create a class called MyView that subclasses
 
             # Edit the original message
             message_content, is_vote_finished = await updateVoteMessage(vote_id, verified_artist_role_member_count)
+            embed = discord.Embed(description=message_content)
             if is_vote_finished:
-                await interaction.edit_original_message(view = None, content = message_content)
+                await interaction.edit_original_message(view = None, embed = embed)
             else:
-                await interaction.edit_original_message(content = message_content)
+                await interaction.edit_original_message(embed = embed)
         else:
             await interaction.response.send_message("Only currently-verified artists are allowed to vote; this vote has not been recorded. If you feel you are receiving this message in error, please <#1101604838137143406> and we'll get back with you ASAP!", ephemeral=True)
 
@@ -224,10 +226,11 @@ async def updateVotes():
         channel = discord.utils.get(guild.channels, id=vote[2])
         message = await channel.fetch_message(vote[3])
         message_content, is_vote_finished = await updateVoteMessage(vote[0], verified_artist_role_member_count)
+        embed = discord.Embed(description=message_content)
         if is_vote_finished:
-            await message.edit(content = message_content, view = None)
+            await message.edit(view = None, embed = embed)
         else:
-            await message.edit(content = message_content)
+            await message.edit(view = VoteView, embed = embed)
 
 
 async def updateVoteMessage(vote_id, number_of_verified_artists):
