@@ -126,9 +126,9 @@ class VoteView(discord.ui.View):  # Create a class called MyView that subclasses
             message_content, is_vote_finished = await updateVoteMessage(vote_id, verified_artist_role_member_count)
             embed = discord.Embed(description=message_content)
             if is_vote_finished:
-                await interaction.edit_original_message(view = None, embed = embed)
+                await interaction.response.edit_message(view = None, embed = embed)
             else:
-                await interaction.edit_original_message(embed = embed)
+                await interaction.response.edit_message(embed = embed)
         else:
             await interaction.response.send_message("Only currently-verified artists are allowed to vote; this vote has not been recorded. If you feel you are receiving this message in error, please <#1101604838137143406> and we'll get back with you ASAP!", ephemeral=True)
 
@@ -165,9 +165,9 @@ class VoteView(discord.ui.View):  # Create a class called MyView that subclasses
             message_content, is_vote_finished = await updateVoteMessage(vote_id, verified_artist_role_member_count)
             embed = discord.Embed(description=message_content)
             if is_vote_finished:
-                await interaction.edit_original_message(view = None, embed = embed)
+                await interaction.response.edit_message(view = None, embed = embed)
             else:
-                await interaction.edit_original_message(embed = embed)
+                await interaction.response.edit_message(embed = embed)
         else:
             await interaction.response.send_message("Only currently-verified artists are allowed to vote; this vote has not been recorded. If you feel you are receiving this message in error, please <#1101604838137143406> and we'll get back with you ASAP!", ephemeral=True)
 
@@ -180,9 +180,9 @@ async def on_ready():
     message = await channel.fetch_message(message_id)
     await message.edit(content="Tap the below buttons to add/remove the corresponding role:", view=MyView())
     while True:
+        await updateVotes()
         await track()
         await updateCalendar()
-        await updateVotes()
         await asyncio.sleep(300)
 
 # List of role names that you want to ignore
