@@ -233,7 +233,7 @@ async def updateVotes():
             await message.edit(view = None, embed = embed)
         else:
             print ("or here")
-            await message.edit(view = VoteView, embed = embed)
+            await message.edit(view = VoteView(), embed = embed)
 
 
 async def updateVoteMessage(vote_id, number_of_verified_artists):
