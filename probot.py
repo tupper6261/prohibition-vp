@@ -268,10 +268,8 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
     else:
         quorum_reached = True
     #See if a majority vote has been reached
-    votes_for_percent = round((float(votes_for)/float(number_of_verified_artists)) * 100, 2)
-    votes_against_percent = round((float(votes_against)/float(number_of_verified_artists)) * 100, 2)
-    print (votes_for_percent)
-    print (votes_against_percent)
+    votes_for_percent = round((float(votes_for)/float(number_of_verified_artists)), 4)
+    votes_against_percent = round((float(votes_against)/float(number_of_verified_artists)), 4)
     if votes_for_percent > VERIFICATION_MAJORITY or votes_against_percent > VERIFICATION_MAJORITY:
         majority_vote_reached = True
     else:
