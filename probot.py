@@ -36,13 +36,13 @@ Acceptance Criteria
 
 - A simple majority determines if a vote passes or fails
     - More than 50% in favor passes the motion
-    - Less than 50% in favor denies the motion
+    - More than 50% in opposition denies the motion
 - The motion fails if less than 10% of verified artists vote
 - The maximum duration is 1 week
 - The minimum duration is 48 hours
 - The vote fails if there is a tie
 '''
-VERIFICATION_ACCEPTANCE_CRITERIA = "**Acceptance Criteria:**\n- A simple majority determines if a vote passes or fails\n    - More than 50% in favor passes the motion\n    - Less than 50% in favor denies the motion\n- The motion fails if less than 10% of verified artists vote\n- The maximum duration is 1 week\n- The minimum duration is 48 hours\n- The vote fails if there is a tie"
+VERIFICATION_ACCEPTANCE_CRITERIA = "**Acceptance Criteria:**\n- A simple majority determines if a vote passes or fails\n    - More than 50% in favor passes the motion\n    - More than 50% in opposition denies the motion\n- The motion fails if less than 10% of verified artists vote\n- The maximum duration is 1 week\n- The minimum duration is 48 hours\n- The vote fails if there is a tie"
 VERIFICATION_MAJORITY = .5
 VERIFICATION_MAJORITY_STRING = "50%"
 VERIFICATION_QUORUM = .1
