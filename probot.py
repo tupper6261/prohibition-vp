@@ -330,7 +330,7 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
                 if not quorum_reached:
                     message_content += "not "
                 message_content += "been reached"
-                message_content += VERIFICATION_MINIMUM_VOTE_DURATION_STRING + " minimum vote time has elapsed."
+                message_content += "\n" + VERIFICATION_MINIMUM_VOTE_DURATION_STRING + " minimum vote time has elapsed."
                 message_content += "\nVote will continue until a " + VERIFICATION_MAJORITY_STRING + " majority has been reached or until <t:" + str(latest_vote_end) + ":f>, whichever is earlier"
     
     return message_content, is_vote_finished
