@@ -262,7 +262,7 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
     else:
         maximum_duration_reached =True
     #See if a quorum has been reached
-    total_vote_percent = round(((float(votes_for) + float(votes_against))/float(number_of_verified_artists)) * 100, 2)
+    total_vote_percent = round(((float(votes_for) + float(votes_against))/float(number_of_verified_artists)), 4)
     if total_vote_percent < VERIFICATION_QUORUM:
         quorum_reached = False
     else:
@@ -410,7 +410,7 @@ async def artistverificationvote(ctx, walletaddress: Option(str, "What is the ap
 
     voting_message = await channel.send(embed = embed, view = VoteView())
 
-    ping_message = await channel.send("<@" + str(VERIFIED_ARTIST_ROLE_ID) + ">, there is a new verified artist vote for your review :point_up_2:")
+    ping_message = await channel.send("<@&" + str(VERIFIED_ARTIST_ROLE_ID) + ">, there is a new verified artist vote for your review :point_up_2:")
 
     conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
     cur = conn.cursor()
