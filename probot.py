@@ -393,7 +393,7 @@ async def artistverificationvote(ctx, walletaddress: Option(str, "What is the ap
     
     message_content = VERIFICATION_ACCEPTANCE_CRITERIA
 
-    embed = discord.Embed(title=message_title, description=message_content)
+    embed = discord.Embed(description=message_content)
 
     verification_acceptance_criteria_message = await channel.send(embed = embed)
 
