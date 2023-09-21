@@ -281,7 +281,7 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
         message_content = "\n\n**Current Vote Status:**"
         message_content += "\n{0} votes for".format(votes_for)
         message_content += "\n{0} votes against".format(votes_against)
-        message_content += "\n{0}% of Verified Artists have voted - a quorum has ".format(str(total_vote_percent*100))
+        message_content += "\n{0}% of Verified Artists have voted - a quorum has ".format(str(round(total_vote_percent*100,2)))
         if not quorum_reached:
             message_content += "not "
         message_content += "been reached"
@@ -326,7 +326,7 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
                 message_content = "\n\n**Current Vote Status:**"
                 message_content += "\n{0} votes for".format(votes_for)
                 message_content += "\n{0} votes against".format(votes_against)
-                message_content += "\n{0}% of Verified Artists have voted - a quorum has ".format(str(total_vote_percent*100))
+                message_content += "\n{0}% of Verified Artists have voted - a quorum has ".format(str(round(total_vote_percent*100,2)))
                 if not quorum_reached:
                     message_content += "not "
                 message_content += "been reached"
