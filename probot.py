@@ -386,12 +386,16 @@ async def artistverificationvote(ctx, walletaddress: Option(str, "What is the ap
         message_content += "\n**Instagram Profile: **[" + ighandle + "](https://instagram.com/" + ighandle +")"
     if website:
         message_content += "\n**Personal Website: **" + website
-    
-    message_content +="\n\n" + VERIFICATION_ACCEPTANCE_CRITERIA
 
     embed = discord.Embed(title=message_title, description=message_content)
 
     info_message = await channel.send(embed = embed)
+    
+    message_content = VERIFICATION_ACCEPTANCE_CRITERIA
+
+    embed = discord.Embed(title=message_title, description=message_content)
+
+    verification_acceptance_criteria_message = await channel.send(embed = embed)
 
     #TODO - create vote status message
 
@@ -405,6 +409,8 @@ async def artistverificationvote(ctx, walletaddress: Option(str, "What is the ap
     embed = discord.Embed(description=message_content)
 
     voting_message = await channel.send(embed = embed, view = VoteView())
+
+    ping_message = await channel.send("<@" + VERIFIED_ARTIST_ROLE_ID + ">, there is a new verified artist vote for your review :point_up_2:")
 
     conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
     cur = conn.cursor()
