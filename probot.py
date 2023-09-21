@@ -410,7 +410,7 @@ async def artistverificationvote(ctx, walletaddress: Option(str, "What is the ap
 
     voting_message = await channel.send(embed = embed, view = VoteView())
 
-    ping_message = await channel.send("<@" + VERIFIED_ARTIST_ROLE_ID + ">, there is a new verified artist vote for your review :point_up_2:")
+    ping_message = await channel.send("<@" + str(VERIFIED_ARTIST_ROLE_ID) + ">, there is a new verified artist vote for your review :point_up_2:")
 
     conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
     cur = conn.cursor()
