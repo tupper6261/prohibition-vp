@@ -711,7 +711,7 @@ async def track():
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(mints):
-            cur.execute("select * from prohibition_mints where mint_id = '{0}'".format(i['txHash']))
+            cur.execute("select * from prohibition_mints where id = '{0}'".format(i['txHash']))
             results = cur.fetchall()
             if results == []:
                 token_id = i['token']['tokenId']
@@ -771,7 +771,7 @@ async def track():
                 command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_mint_hash'".format(latest_mint_hash)
                 cur.execute(command)
                 conn.commit()
-                cur.execute("insert into prohibition_mints (mint_id, timestamp) values ('{0}', {1})".format(i['txHash'], int(time.time())))
+                cur.execute("insert into prohibition_mints (id, timestamp) values ('{0}', {1})".format(i['txHash'], int(time.time())))
                 conn.commit()
                 #Call the OpenSea refresh metadata endpoint and get the newly rendered image updated
                 url = "https://api.opensea.io/v2/chain/arbitrum/contract/0x47A91457a3a1f700097199Fd63c039c4784384aB/nfts/" + token_id + "/refresh"
@@ -784,7 +784,7 @@ async def track():
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(sales):
-            cur.execute("select * from prohibition_sales where sale_id = '{0}'".format(i['txHash']))
+            cur.execute("select * from prohibition_sales where id = '{0}'".format(i['txHash']))
             results = cur.fetchall()
             if results == []:
                 owner = i['to']
@@ -824,14 +824,14 @@ async def track():
                 command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_sale_hash'".format(latest_sale_hash)
                 cur.execute(command)
                 conn.commit()
-                cur.execute("insert into prohibition_sales (sale_id, timestamp) values ('{0}', {1})".format(i['txHash'], int(time.time())))
+                cur.execute("insert into prohibition_sales (id, timestamp) values ('{0}', {1})".format(i['txHash'], int(time.time())))
                 conn.commit()
             else:
                 break
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(offers):
-            cur.execute("select * from prohibition_offers where offer_id = '{0}'".format(i['id']))
+            cur.execute("select * from prohibition_offers where id = '{0}'".format(i['id']))
             results = cur.fetchall()
             if results == []:
                 #Get information on the maker of the offer
@@ -908,14 +908,14 @@ async def track():
                 command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_offer_id'".format(latest_offer_id)
                 cur.execute(command)
                 conn.commit()
-                cur.execute("insert into prohibition_offers (offer_id, timestamp) values ('{0}', {1})".format(i['id'], int(time.time())))
+                cur.execute("insert into prohibition_offers (id, timestamp) values ('{0}', {1})".format(i['id'], int(time.time())))
                 conn.commit()
             else:
                 break
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(listings):
-            cur.execute("select * from prohibition_listings where listing_id = '{0}'".format(i['id']))
+            cur.execute("select * from prohibition_listings where id = '{0}'".format(i['id']))
             results = cur.fetchall()
             if results == []:
                 token_id = i['criteria']['data']['token']['tokenId']
@@ -975,7 +975,7 @@ async def track():
                 command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_listing_id'".format(latest_listing_id)
                 cur.execute(command)
                 conn.commit()
-                cur.execute("insert into prohibition_listings (listing_id, timestamp) values ('{0}', {1})".format(i['id'], int(time.time())))
+                cur.execute("insert into prohibition_listings (id, timestamp) values ('{0}', {1})".format(i['id'], int(time.time())))
                 conn.commit()
             else:
                 break
