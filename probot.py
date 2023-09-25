@@ -711,144 +711,225 @@ async def track():
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(mints):
-            token_id = i['token']['tokenId']
-            collection_id = int(int(token_id)/1000000)
-            collection_name = i['token']['collection']['name']
-            token_name, token_artist = collection_name.rsplit(" by ", 1)
-            if token_id[-6:].lstrip('0') == "":
-                token_name = token_name + " #0"
-            else:
-                token_name = token_name + " #"+ token_id[-6:].lstrip('0')
-            timestamp = i['timestamp']
-            image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
-            #the amount of time to wait for the render is 30 minutes and that timer starts at the time of mint
-            wait_time = 1800 - (int(time.time()) - timestamp)
-            #try to get the image url
-            response = requests.get(image_url, headers=headers)
-            response_code = response.status_code
-            while response_code != 200 and wait_time > 0:
-                await asyncio.sleep(60)
+            cur.execute("select * from prohibition_mints where mint_id = '{0}'".format(i['txHash']))
+            results = cur.fetchall()
+            if results == []:
+                token_id = i['token']['tokenId']
+                collection_id = int(int(token_id)/1000000)
+                collection_name = i['token']['collection']['name']
+                token_name, token_artist = collection_name.rsplit(" by ", 1)
+                if token_id[-6:].lstrip('0') == "":
+                    token_name = token_name + " #0"
+                else:
+                    token_name = token_name + " #"+ token_id[-6:].lstrip('0')
+                timestamp = i['timestamp']
+                image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
+                #the amount of time to wait for the render is 30 minutes and that timer starts at the time of mint
+                wait_time = 1800 - (int(time.time()) - timestamp)
+                #try to get the image url
                 response = requests.get(image_url, headers=headers)
                 response_code = response.status_code
-                wait_time -= 60
-            
-            #We're gonna wait at least 5 minutes from the mint time to refresh the metadata
-            wait_time = 300 - (int(time.time()) - timestamp)
-            if wait_time > 0:
-                await asyncio.sleep(wait_time)
+                while response_code != 200 and wait_time > 0:
+                    await asyncio.sleep(60)
+                    response = requests.get(image_url, headers=headers)
+                    response_code = response.status_code
+                    wait_time -= 60
+                
+                #We're gonna wait at least 5 minutes from the mint time to refresh the metadata
+                wait_time = 300 - (int(time.time()) - timestamp)
+                if wait_time > 0:
+                    await asyncio.sleep(wait_time)
 
-            url = "https://api-arbitrum.reservoir.tools/tokens/refresh/v1"
-            payload = {
-                "liquidityOnly": False,
-                "overrideCoolDown": False,
-                "token": "0x47A91457a3a1f700097199Fd63c039c4784384aB:" + token_id
-            }
-            #Check if we've been rate limited, and if so, wait 5 seconds and try again
-            while True:
-                response = requests.post(url, json=payload, headers=refreshHeaders)
-                data = json.loads(response.text)
-                response_code = response.status_code
-                if response_code == 429:
-                    await asyncio.sleep(5)
+                url = "https://api-arbitrum.reservoir.tools/tokens/refresh/v1"
+                payload = {
+                    "liquidityOnly": False,
+                    "overrideCoolDown": False,
+                    "token": "0x47A91457a3a1f700097199Fd63c039c4784384aB:" + token_id
+                }
+                #Check if we've been rate limited, and if so, wait 5 seconds and try again
+                while True:
+                    response = requests.post(url, json=payload, headers=refreshHeaders)
+                    data = json.loads(response.text)
+                    response_code = response.status_code
+                    if response_code == 429:
+                        await asyncio.sleep(5)
+                    else:
+                        break
+                
+                owner = i['to']
+                owner_handle, owner_profile = await getUser(owner)
+                latest_mint_hash = i['txHash']
+
+                embed = discord.Embed(title=f"{token_name} by {token_artist}", description=f"{token_name} was minted by [{owner_handle}]({owner_profile}) at <t:{timestamp}:f>.\n\nhttps://prohibition.art/token/{token_id}")
+                embed.set_image(url=image_url)
+                #If this mint is from the H-C collection
+                if collection_id == 100:
+                    await hc_mint_channel.send(embed=embed)
                 else:
-                    break
-            
-            owner = i['to']
-            owner_handle, owner_profile = await getUser(owner)
-            latest_mint_hash = i['txHash']
-
-            embed = discord.Embed(title=f"{token_name} by {token_artist}", description=f"{token_name} was minted by [{owner_handle}]({owner_profile}) at <t:{timestamp}:f>.\n\nhttps://prohibition.art/token/{token_id}")
-            embed.set_image(url=image_url)
-            #If this mint is from the H-C collection
-            if collection_id == 100:
-                await hc_mint_channel.send(embed=embed)
+                    await mint_channel.send(embed=embed)
+                #Update our latest event so we know where we left off for next time
+                command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_mint_hash'".format(latest_mint_hash)
+                cur.execute(command)
+                conn.commit()
+                cur.execute("insert into prohibition_mints (mint_id, timestamp) values ('{0}', {1})".format(i['txHash'], int(time.time())))
+                conn.commit()
+                #Call the OpenSea refresh metadata endpoint and get the newly rendered image updated
+                url = "https://api.opensea.io/v2/chain/arbitrum/contract/0x47A91457a3a1f700097199Fd63c039c4784384aB/nfts/" + token_id + "/refresh"
+                response = requests.post(url, headers=OSheaders)
+                await asyncio.sleep(1)
+                #We'll pause for a second so we don't get rate limited
             else:
-                await mint_channel.send(embed=embed)
-            #Update our latest event so we know where we left off for next time
-            command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_mint_hash'".format(latest_mint_hash)
-            cur.execute(command)
-            conn.commit()
-            #Call the OpenSea refresh metadata endpoint and get the newly rendered image updated
-            url = "https://api.opensea.io/v2/chain/arbitrum/contract/0x47A91457a3a1f700097199Fd63c039c4784384aB/nfts/" + token_id + "/refresh"
-            response = requests.post(url, headers=OSheaders)
-            await asyncio.sleep(1)
-            #We'll pause for a second so we don't get rate limited
+                break
             
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(sales):
-            owner = i['to']
-            owner_handle, owner_profile = await getUser(owner)
-            seller = i['from']
-            seller_handle, seller_profile = await getUser(seller)
-            token_id = i['token']['tokenId']
-            collection_id = int(int(token_id)/1000000)
-            collection_name = i['token']['collection']['name']
-            token_name, token_artist = collection_name.rsplit(" by ", 1)
-            if token_id[-6:].lstrip('0') == "":
-                token_name = token_name + " #0"
-            else:
-                token_name = token_name + " #"+ token_id[-6:].lstrip('0')
-            image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
-            wait_time = 60
-            #try to get the image url
-            response = requests.get(image_url, headers=headers)
-            response_code = response.status_code
-            while response_code != 200 and wait_time > 0:
-                await asyncio.sleep(60)
+            cur.execute("select * from prohibition_sales where sale_id = '{0}'".format(i['txHash']))
+            results = cur.fetchall()
+            if results == []:
+                owner = i['to']
+                owner_handle, owner_profile = await getUser(owner)
+                seller = i['from']
+                seller_handle, seller_profile = await getUser(seller)
+                token_id = i['token']['tokenId']
+                collection_id = int(int(token_id)/1000000)
+                collection_name = i['token']['collection']['name']
+                token_name, token_artist = collection_name.rsplit(" by ", 1)
+                if token_id[-6:].lstrip('0') == "":
+                    token_name = token_name + " #0"
+                else:
+                    token_name = token_name + " #"+ token_id[-6:].lstrip('0')
+                image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
+                wait_time = 60
+                #try to get the image url
                 response = requests.get(image_url, headers=headers)
                 response_code = response.status_code
-                wait_time -= 1
-            timestamp = i['timestamp']
-            price_symbol = i['price']['currency']['symbol']
-            price_amount = i['price']['amount']['decimal']
-            latest_sale_hash = i['txHash']
-            embed = discord.Embed(title=f"{token_name} by {token_artist}", description=f"{token_name} sold for {price_amount} {price_symbol} at <t:{timestamp}:f>.\n\n**Buyer:**\n[{owner_handle}]({owner_profile})\n\n**Seller:**\n[{seller_handle}]({seller_profile})\n\nhttps://prohibition.art/token/{token_id}")
-            embed.set_image(url=image_url)
-            #If this is the h+c collection
-            if collection_id == 100:
-                await hc_sales_channel.send(embed=embed)
-            else:
-                await sales_channel.send(embed=embed)
-            #Update our latest event so we know where we left off for next time
-            command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_sale_hash'".format(latest_sale_hash)
-            cur.execute(command)
-            conn.commit()
-
-        #Go through our list in reverse order so that we post the oldest events first
-        for i in reversed(offers):
-            #Get information on the maker of the offer
-            maker = i['maker']
-            maker_handle, maker_profile = await getUser(maker)
-            #Get info on the offer
-            offer_price = i['price']['amount']['decimal']
-            offer_symbol = i['price']['currency']['symbol']
-            latest_offer_id = i['id']
-            timestamp_str = i['createdAt']
-            timestamp_dt = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S.%fZ")
-            timestamp = int(timestamp_dt.timestamp())
-            #if this is a collection offer
-            if i['criteria']['kind'] == "collection":
-                collection_id_base = i['criteria']['data']['collection']['id'].split(":")[1]
-                collection_id = int(int(collection_id_base)/1000000)
-                offer_quantity = i['quantityRemaining']
-                url = "https://prohibition.art/api/project/0x47A91457a3a1f700097199Fd63c039c4784384aB-"+str(collection_id)
-                response = requests.get(url, headers=headers)
-                data = json.loads(response.text)
-                collection_name = data['name']
-                collection_artist = data['artistName']
-                project_slug = data['slug']
-                image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + collection_id_base + ".png"
-                embed = discord.Embed(title=f"{collection_name} by {collection_artist}", description=f"{collection_name} received {offer_quantity} collection offer(s) of {offer_price} {offer_symbol} at <t:{timestamp}:f>.\n\n**Offer Maker:**\n[{maker_handle}]({maker_profile})\n\nhttps://prohibition.art/project/{project_slug}")
+                while response_code != 200 and wait_time > 0:
+                    await asyncio.sleep(60)
+                    response = requests.get(image_url, headers=headers)
+                    response_code = response.status_code
+                    wait_time -= 1
+                timestamp = i['timestamp']
+                price_symbol = i['price']['currency']['symbol']
+                price_amount = i['price']['amount']['decimal']
+                latest_sale_hash = i['txHash']
+                embed = discord.Embed(title=f"{token_name} by {token_artist}", description=f"{token_name} sold for {price_amount} {price_symbol} at <t:{timestamp}:f>.\n\n**Buyer:**\n[{owner_handle}]({owner_profile})\n\n**Seller:**\n[{seller_handle}]({seller_profile})\n\nhttps://prohibition.art/token/{token_id}")
                 embed.set_image(url=image_url)
                 #If this is the h+c collection
                 if collection_id == 100:
-                    await hc_offers_channel.send(embed=embed)
+                    await hc_sales_channel.send(embed=embed)
                 else:
-                    await offers_channel.send(embed=embed)
+                    await sales_channel.send(embed=embed)
+                #Update our latest event so we know where we left off for next time
+                command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_sale_hash'".format(latest_sale_hash)
+                cur.execute(command)
+                conn.commit()
+                cur.execute("insert into prohibition_sales (sale_id, timestamp) values ('{0}', {1})".format(i['txHash'], int(time.time())))
+                conn.commit()
             else:
+                break
+
+        #Go through our list in reverse order so that we post the oldest events first
+        for i in reversed(offers):
+            cur.execute("select * from prohibition_offers where offer_id = '{0}'".format(i['id']))
+            results = cur.fetchall()
+            if results == []:
+                #Get information on the maker of the offer
+                maker = i['maker']
+                maker_handle, maker_profile = await getUser(maker)
+                #Get info on the offer
+                offer_price = i['price']['amount']['decimal']
+                offer_symbol = i['price']['currency']['symbol']
+                latest_offer_id = i['id']
+                timestamp_str = i['createdAt']
+                timestamp_dt = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+                timestamp = int(timestamp_dt.timestamp())
+                #if this is a collection offer
+                if i['criteria']['kind'] == "collection":
+                    collection_id_base = i['criteria']['data']['collection']['id'].split(":")[1]
+                    collection_id = int(int(collection_id_base)/1000000)
+                    offer_quantity = i['quantityRemaining']
+                    url = "https://prohibition.art/api/project/0x47A91457a3a1f700097199Fd63c039c4784384aB-"+str(collection_id)
+                    response = requests.get(url, headers=headers)
+                    data = json.loads(response.text)
+                    collection_name = data['name']
+                    collection_artist = data['artistName']
+                    project_slug = data['slug']
+                    image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + collection_id_base + ".png"
+                    embed = discord.Embed(title=f"{collection_name} by {collection_artist}", description=f"{collection_name} received {offer_quantity} collection offer(s) of {offer_price} {offer_symbol} at <t:{timestamp}:f>.\n\n**Offer Maker:**\n[{maker_handle}]({maker_profile})\n\nhttps://prohibition.art/project/{project_slug}")
+                    embed.set_image(url=image_url)
+                    #If this is the h+c collection
+                    if collection_id == 100:
+                        await hc_offers_channel.send(embed=embed)
+                    else:
+                        await offers_channel.send(embed=embed)
+                else:
+                    token_id = i['criteria']['data']['token']['tokenId']
+                    collection_id = int(int(token_id)/1000000)
+                    #Check if we've been rate limited, and if so, wait 5 seconds and try again
+                    while True:
+                        #Get info on the token
+                        url = "https://api-arbitrum.reservoir.tools/tokens/v6?tokens=0x47a91457a3a1f700097199fd63c039c4784384ab%3A"+token_id
+                        response = requests.get(url, headers=headers)
+                        data = json.loads(response.text)
+                        response_code = response.status_code
+                        if response_code == 429:
+                            await asyncio.sleep(5)
+                        else:
+                            break
+                
+                    collection_name = data['tokens'][0]['token']['collection']['name']
+                    token_name, token_artist = collection_name.rsplit(" by ", 1)
+                    if token_id[-6:].lstrip('0') == "":
+                        token_name = token_name + " #0"
+                    else:
+                        token_name = token_name + " #"+ token_id[-6:].lstrip('0')
+                    image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
+                    wait_time = 60
+                    #try to get the image url
+                    response = requests.get(image_url, headers=headers)
+                    response_code = response.status_code
+                    while response_code != 200 and wait_time > 0:
+                        await asyncio.sleep(60)
+                        response = requests.get(image_url, headers=headers)
+                        response_code = response.status_code
+                        wait_time -= 1
+                    owner_address = data['tokens'][0]['token']['owner']
+                    #Get info on the current owner
+                    owner_handle, owner_profile = await getUser(owner_address)
+                    embed = discord.Embed(title=f"{token_name} by {token_artist}", description=f"{token_name} received a {offer_price} {offer_symbol} offer at <t:{timestamp}:f>.\n\n**Offer Maker:**\n[{maker_handle}]({maker_profile})\n\n**Current Owner:**\n[{owner_handle}]({owner_profile})\n\nhttps://prohibition.art/token/{token_id}")
+                    embed.set_image(url=image_url)
+                    #If this is the h+c collection
+                    if collection_id == 100:
+                        await hc_offers_channel.send(embed=embed)
+                    else:
+                        await offers_channel.send(embed=embed)
+                #Update our latest event so we know where we left off for next time
+                command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_offer_id'".format(latest_offer_id)
+                cur.execute(command)
+                conn.commit()
+                cur.execute("insert into prohibition_offers (offer_id, timestamp) values ('{0}', {1})".format(i['id'], int(time.time())))
+                conn.commit()
+            else:
+                break
+
+        #Go through our list in reverse order so that we post the oldest events first
+        for i in reversed(listings):
+            cur.execute("select * from prohibition_listings where listing_id = '{0}'".format(i['id']))
+            results = cur.fetchall()
+            if results == []:
                 token_id = i['criteria']['data']['token']['tokenId']
                 collection_id = int(int(token_id)/1000000)
+                #Get info on the current owner
+                maker = i['maker']
+                maker_handle, maker_profile = await getUser(maker)
+                #Get info on the listing
+                listing_price = i['price']['amount']['decimal']
+                listing_symbol = i['price']['currency']['symbol']
+                latest_listing_id = i['id']
+                timestamp_str = i['createdAt']
+                timestamp_dt = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+                timestamp = int(timestamp_dt.timestamp())
                 #Check if we've been rate limited, and if so, wait 5 seconds and try again
                 while True:
                     #Get info on the token
@@ -860,7 +941,10 @@ async def track():
                         await asyncio.sleep(5)
                     else:
                         break
-            
+                
+
+                if data['tokens'] == []:
+                    continue
                 collection_name = data['tokens'][0]['token']['collection']['name']
                 token_name, token_artist = collection_name.rsplit(" by ", 1)
                 if token_id[-6:].lstrip('0') == "":
@@ -880,77 +964,21 @@ async def track():
                 owner_address = data['tokens'][0]['token']['owner']
                 #Get info on the current owner
                 owner_handle, owner_profile = await getUser(owner_address)
-                embed = discord.Embed(title=f"{token_name} by {token_artist}", description=f"{token_name} received a {offer_price} {offer_symbol} offer at <t:{timestamp}:f>.\n\n**Offer Maker:**\n[{maker_handle}]({maker_profile})\n\n**Current Owner:**\n[{owner_handle}]({owner_profile})\n\nhttps://prohibition.art/token/{token_id}")
+                embed = discord.Embed(title=f"{token_name} by {token_artist}", description=f"{token_name} was listed for sale at <t:{timestamp}:f>.\n\n**Price:**\n{listing_price} {listing_symbol}\n\n**Owner:**\n[{owner_handle}]({owner_profile})\n\nhttps://prohibition.art/token/{token_id}")
                 embed.set_image(url=image_url)
                 #If this is the h+c collection
                 if collection_id == 100:
-                    await hc_offers_channel.send(embed=embed)
+                    await hc_listings_channel.send(embed=embed)
                 else:
-                    await offers_channel.send(embed=embed)
-            #Update our latest event so we know where we left off for next time
-            command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_offer_id'".format(latest_offer_id)
-            cur.execute(command)
-            conn.commit()
-
-        #Go through our list in reverse order so that we post the oldest events first
-        for i in reversed(listings):
-            token_id = i['criteria']['data']['token']['tokenId']
-            collection_id = int(int(token_id)/1000000)
-            #Get info on the current owner
-            maker = i['maker']
-            maker_handle, maker_profile = await getUser(maker)
-            #Get info on the listing
-            listing_price = i['price']['amount']['decimal']
-            listing_symbol = i['price']['currency']['symbol']
-            latest_listing_id = i['id']
-            timestamp_str = i['createdAt']
-            timestamp_dt = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S.%fZ")
-            timestamp = int(timestamp_dt.timestamp())
-            #Check if we've been rate limited, and if so, wait 5 seconds and try again
-            while True:
-                #Get info on the token
-                url = "https://api-arbitrum.reservoir.tools/tokens/v6?tokens=0x47a91457a3a1f700097199fd63c039c4784384ab%3A"+token_id
-                response = requests.get(url, headers=headers)
-                data = json.loads(response.text)
-                response_code = response.status_code
-                if response_code == 429:
-                    await asyncio.sleep(5)
-                else:
-                    break
-            
-
-            if data['tokens'] == []:
-                continue
-            collection_name = data['tokens'][0]['token']['collection']['name']
-            token_name, token_artist = collection_name.rsplit(" by ", 1)
-            if token_id[-6:].lstrip('0') == "":
-                token_name = token_name + " #0"
+                    await listings_channel.send(embed=embed)
+                #Update our latest event so we know where we left off for next time
+                command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_listing_id'".format(latest_listing_id)
+                cur.execute(command)
+                conn.commit()
+                cur.execute("insert into prohibition_listings (listing_id, timestamp) values ('{0}', {1})".format(i['id'], int(time.time())))
+                conn.commit()
             else:
-                token_name = token_name + " #"+ token_id[-6:].lstrip('0')
-            image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + token_id + ".png"
-            wait_time = 60
-            #try to get the image url
-            response = requests.get(image_url, headers=headers)
-            response_code = response.status_code
-            while response_code != 200 and wait_time > 0:
-                await asyncio.sleep(60)
-                response = requests.get(image_url, headers=headers)
-                response_code = response.status_code
-                wait_time -= 1
-            owner_address = data['tokens'][0]['token']['owner']
-            #Get info on the current owner
-            owner_handle, owner_profile = await getUser(owner_address)
-            embed = discord.Embed(title=f"{token_name} by {token_artist}", description=f"{token_name} was listed for sale at <t:{timestamp}:f>.\n\n**Price:**\n{listing_price} {listing_symbol}\n\n**Owner:**\n[{owner_handle}]({owner_profile})\n\nhttps://prohibition.art/token/{token_id}")
-            embed.set_image(url=image_url)
-            #If this is the h+c collection
-            if collection_id == 100:
-                await hc_listings_channel.send(embed=embed)
-            else:
-                await listings_channel.send(embed=embed)
-            #Update our latest event so we know where we left off for next time
-            command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_listing_id'".format(latest_listing_id)
-            cur.execute(command)
-            conn.commit()
+                break
 
         cur.close()
         conn.commit()
