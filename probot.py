@@ -127,6 +127,7 @@ class VoteView(discord.ui.View):  # Create a class called MyView that subclasses
             embed = discord.Embed(description=message_content)
             if is_vote_finished:
                 await interaction.response.edit_message(view = None, embed = embed)
+                await interaction.channel.send("<@&1101586848213651556>, this vote has ended.")
             else:
                 await interaction.response.edit_message(embed = embed)
         else:
@@ -166,6 +167,7 @@ class VoteView(discord.ui.View):  # Create a class called MyView that subclasses
             embed = discord.Embed(description=message_content)
             if is_vote_finished:
                 await interaction.response.edit_message(view = None, embed = embed)
+                await interaction.channel.send("<@&1101586848213651556>, this vote has ended.")
             else:
                 await interaction.response.edit_message(embed = embed)
         else:
@@ -229,6 +231,7 @@ async def updateVotes():
         embed = discord.Embed(description=message_content)
         if is_vote_finished:
             await message.edit(view = None, embed = embed)
+            await channel.send("<@&1101586848213651556>, this vote has ended.")
         else:
             await message.edit(view = VoteView(), embed = embed)
 
@@ -561,8 +564,7 @@ async def track():
         cur.execute(command)
         results = cur.fetchall()
         latest_listing_id = results[0][1]
-        #for debugging
-        print ("Latest Listing ID: " + latest_listing_id)
+        
         cur.close()
         conn.commit()
         conn.close()
