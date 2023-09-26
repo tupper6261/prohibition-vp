@@ -192,12 +192,14 @@ class MyCog(commands.Cog):
     def cog_unload(self):
         self.updater.cancel()
 
-    @tasks.loop(seconds=5.0)
+    @tasks.loop(count = None)
     async def updater(self):
+        print ("starting loop")
         await updateRoles()
         await updateVotes()
         await track()
         await updateCalendar()
+        print ("sleeping")
         await asyncio.sleep(300)      
 
     @updater.before_loop
