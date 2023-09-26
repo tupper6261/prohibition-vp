@@ -54,6 +54,8 @@ VERIFICATION_MAXIMUM_VOTE_DURATION = 604800 #1 week --> 604800 seconds
 
 DELETE_LINKS = False
 
+UPDATE_LOOP = True
+
 # Set up the bot with the proper intents to read message content and reactions
 intents = discord.Intents.default()
 intents.message_content = True
@@ -173,16 +175,19 @@ class VoteView(discord.ui.View):  # Create a class called MyView that subclasses
         else:
             await interaction.response.send_message("Only currently-verified artists are allowed to vote; this vote has not been recorded. If you feel you are receiving this message in error, please <#1101604838137143406> and we'll get back with you ASAP!", ephemeral=True)
 
-'''
 @bot.event
 async def on_ready():
+    if UPDATE_LOOP:
+        UPDATE_LOOP = False
+        await updateLoop()
+
+async def updateLoop():
+    await updateRoles()
     while True:
-        await updateRoles()
         await updateVotes()
         await track()
         await updateCalendar()
         await asyncio.sleep(300)
-'''
 
 class UpdateCog(commands.Cog):
     def __init__(self):
@@ -1022,4 +1027,3 @@ async def track():
         await asyncio.sleep(60)
 
 bot.run(BOT_TOKEN)
-bot.add_cog(UpdateCog(bot))
