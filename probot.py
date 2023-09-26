@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.ui import Button, View, Select
 from discord.commands import Option
 import os
@@ -173,19 +173,36 @@ class VoteView(discord.ui.View):  # Create a class called MyView that subclasses
         else:
             await interaction.response.send_message("Only currently-verified artists are allowed to vote; this vote has not been recorded. If you feel you are receiving this message in error, please <#1101604838137143406> and we'll get back with you ASAP!", ephemeral=True)
 
+'''
 @bot.event
 async def on_ready():
-    guild = discord.utils.get(bot.guilds, id=PROHIBITION_GUILD_ID)
-    channel = discord.utils.get(guild.channels, id=1129038551066103959)
-    #Role message
-    message_id = 1129129885928005874
-    message = await channel.fetch_message(message_id)
-    await message.edit(content="Tap the below buttons to add/remove the corresponding role:", view=MyView())
     while True:
+        await updateRoles()
         await updateVotes()
         await track()
         await updateCalendar()
         await asyncio.sleep(300)
+'''
+
+class MyCog(commands.Cog):
+    def __init__(self):
+        self.bot = bot
+        self.updater.start()
+
+    def cog_unload(self):
+        self.updater.cancel()
+
+    @tasks.loop(seconds=5.0)
+    async def updater(self):
+        await updateRoles()
+        await updateVotes()
+        await track()
+        await updateCalendar()
+        await asyncio.sleep(300)      
+
+    @updater.before_loop
+    async def before_printer(self):
+        await self.bot.wait_until_ready()
 
 # List of role names that you want to ignore
 IGNORED_ROLES = ['Admin', 'Prohibition Team', 'Shillr Team', 'OG']
@@ -210,6 +227,15 @@ async def on_message(message):
             else:
                 await message.delete()
 '''
+
+async def updateRoles():
+    guild = discord.utils.get(bot.guilds, id=PROHIBITION_GUILD_ID)
+    channel = discord.utils.get(guild.channels, id=1129038551066103959)
+    #Role message
+    message_id = 1129129885928005874
+    message = await channel.fetch_message(message_id)
+    await message.edit(content="Tap the below buttons to add/remove the corresponding role:", view=MyView())
+
 
 async def updateVotes():
     #Get the current active votes
@@ -713,8 +739,8 @@ async def track():
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(mints):
-            cur.execute("select * from prohibition_mints where id = '{0}'".format(i['txHash']))
-            results = cur.fetchall()
+            #cur.execute("select * from prohibition_mints where id = '{0}'".format(i['txHash']))
+            results = [] #cur.fetchall()
             if results == []:
                 token_id = i['token']['tokenId']
                 collection_id = int(int(token_id)/1000000)
@@ -773,8 +799,8 @@ async def track():
                 command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_mint_hash'".format(latest_mint_hash)
                 cur.execute(command)
                 conn.commit()
-                cur.execute("insert into prohibition_mints (id, timestamp) values ('{0}', {1})".format(i['txHash'], int(time.time())))
-                conn.commit()
+                #cur.execute("insert into prohibition_mints (id, timestamp) values ('{0}', {1})".format(i['txHash'], int(time.time())))
+                #conn.commit()
                 #Call the OpenSea refresh metadata endpoint and get the newly rendered image updated
                 url = "https://api.opensea.io/v2/chain/arbitrum/contract/0x47A91457a3a1f700097199Fd63c039c4784384aB/nfts/" + token_id + "/refresh"
                 response = requests.post(url, headers=OSheaders)
@@ -786,8 +812,8 @@ async def track():
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(sales):
-            cur.execute("select * from prohibition_sales where id = '{0}'".format(i['txHash']))
-            results = cur.fetchall()
+            #cur.execute("select * from prohibition_sales where id = '{0}'".format(i['txHash']))
+            results = [] #cur.fetchall()
             if results == []:
                 owner = i['to']
                 owner_handle, owner_profile = await getUser(owner)
@@ -826,15 +852,15 @@ async def track():
                 command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_sale_hash'".format(latest_sale_hash)
                 cur.execute(command)
                 conn.commit()
-                cur.execute("insert into prohibition_sales (id, timestamp) values ('{0}', {1})".format(i['txHash'], int(time.time())))
-                conn.commit()
+                #cur.execute("insert into prohibition_sales (id, timestamp) values ('{0}', {1})".format(i['txHash'], int(time.time())))
+                #conn.commit()
             else:
                 break
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(offers):
-            cur.execute("select * from prohibition_offers where id = '{0}'".format(i['id']))
-            results = cur.fetchall()
+            #cur.execute("select * from prohibition_offers where id = '{0}'".format(i['id']))
+            results = [] #cur.fetchall()
             if results == []:
                 #Get information on the maker of the offer
                 maker = i['maker']
@@ -910,15 +936,15 @@ async def track():
                 command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_offer_id'".format(latest_offer_id)
                 cur.execute(command)
                 conn.commit()
-                cur.execute("insert into prohibition_offers (id, timestamp) values ('{0}', {1})".format(i['id'], int(time.time())))
-                conn.commit()
+                #cur.execute("insert into prohibition_offers (id, timestamp) values ('{0}', {1})".format(i['id'], int(time.time())))
+                #conn.commit()
             else:
                 break
 
         #Go through our list in reverse order so that we post the oldest events first
         for i in reversed(listings):
-            cur.execute("select * from prohibition_listings where id = '{0}'".format(i['id']))
-            results = cur.fetchall()
+            #cur.execute("select * from prohibition_listings where id = '{0}'".format(i['id']))
+            results = [] #cur.fetchall()
             if results == []:
                 token_id = i['criteria']['data']['token']['tokenId']
                 collection_id = int(int(token_id)/1000000)
@@ -977,8 +1003,8 @@ async def track():
                 command = "update globalvariables set value = '{0}' where name = 'prohibition_latest_listing_id'".format(latest_listing_id)
                 cur.execute(command)
                 conn.commit()
-                cur.execute("insert into prohibition_listings (id, timestamp) values ('{0}', {1})".format(i['id'], int(time.time())))
-                conn.commit()
+                #cur.execute("insert into prohibition_listings (id, timestamp) values ('{0}', {1})".format(i['id'], int(time.time())))
+                #conn.commit()
             else:
                 break
 
