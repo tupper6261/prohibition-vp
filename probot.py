@@ -177,6 +177,7 @@ class VoteView(discord.ui.View):  # Create a class called MyView that subclasses
 
 @bot.event
 async def on_ready():
+    global UPDATE_LOOP
     if UPDATE_LOOP:
         UPDATE_LOOP = False
         await updateLoop()
