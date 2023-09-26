@@ -184,7 +184,7 @@ async def on_ready():
         await asyncio.sleep(300)
 '''
 
-class MyCog(commands.Cog):
+class UpdateCog(commands.Cog):
     def __init__(self):
         self.bot = bot
         self.updater.start()
@@ -1022,3 +1022,4 @@ async def track():
         await asyncio.sleep(60)
 
 bot.run(BOT_TOKEN)
+bot.add_cog(UpdateCog(bot))
