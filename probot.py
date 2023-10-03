@@ -22,6 +22,7 @@ ALCHEMY_MAINNET_API_KEY = os.getenv('ALCHEMY_MAINNET_API_KEY')
 RESERVOIR_API_KEY = os.getenv('RESERVOIR_API_KEY')
 VP_RESERVOIR_API_KEY = os.getenv('VP_RESERVOIR_API_KEY')
 OPENSEA_API_KEY = os.getenv('OPENSEA_API_KEY')
+
 prohibitionContract = "0x47A91457a3a1f700097199Fd63c039c4784384aB"
 
 PROHIBITION_GUILD_ID = 1101580614945222708
@@ -55,6 +56,9 @@ VERIFICATION_MAXIMUM_VOTE_DURATION = 604800 #1 week --> 604800 seconds
 DELETE_LINKS = False
 
 UPDATE_LOOP = True
+
+response = requests.get("https://api.arbiscan.io/api?module=contract&action=getabi&address=" + prohibitionContract + "&format=raw")
+PROHIBITION_CONTRACT_ABI = response.text
 
 # Set up the bot with the proper intents to read message content and reactions
 intents = discord.Intents.default()
@@ -190,52 +194,6 @@ async def updateLoop():
         await updateCalendar()
         await asyncio.sleep(300)
 
-class UpdateCog(commands.Cog):
-    def __init__(self):
-        self.bot = bot
-        self.updater.start()
-
-    def cog_unload(self):
-        self.updater.cancel()
-
-    @tasks.loop(count = None)
-    async def updater(self):
-        print ("starting loop")
-        await updateRoles()
-        await updateVotes()
-        await track()
-        await updateCalendar()
-        print ("sleeping")
-        await asyncio.sleep(300)      
-
-    @updater.before_loop
-    async def before_printer(self):
-        await self.bot.wait_until_ready()
-
-# List of role names that you want to ignore
-IGNORED_ROLES = ['Admin', 'Prohibition Team', 'Shillr Team', 'OG']
-
-'''
-@bot.event
-async def on_message(message):
-    if DELETE_LINKS:
-        # Check if the message author is the bot itself
-        if message.author == bot.user:
-            return
-
-        # Check if the message author has one of the ignored roles
-        user_roles = [role.name for role in message.author.roles]
-        if any(role in IGNORED_ROLES for role in user_roles):
-            return
-
-        # Check if the message contains a link
-        if 'http://' in message.content or 'https://' in message.content:
-            if 'x.com' in message.content or 'twitter.com' in message.content or 'prohibition.art' in message.content or 'opensea.io' in message.content:
-                return
-            else:
-                await message.delete()
-'''
-
 async def updateRoles():
     guild = discord.utils.get(bot.guilds, id=PROHIBITION_GUILD_ID)
     channel = discord.utils.get(guild.channels, id=1129038551066103959)
@@ -243,7 +201,6 @@ async def updateRoles():
     message_id = 1129129885928005874
     message = await channel.fetch_message(message_id)
     await message.edit(content="Tap the below buttons to add/remove the corresponding role:", view=MyView())
-
 
 async def updateVotes():
     #Get the current active votes
@@ -371,6 +328,11 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
                 message_content += "\nVote will continue until a " + VERIFICATION_MAJORITY_STRING + " majority has been reached or until <t:" + str(latest_vote_end) + ":f>, whichever is earlier"
     
     return message_content, is_vote_finished
+
+#Slash command to discover a new active project
+@bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Discover an actively-minting project on the Prohibition platform")
+async def discover(ctx):
+    return
 
 #Slash command to start a new artist verification vote
 @bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Start a new artist verification vote")
