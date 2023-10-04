@@ -3,11 +3,12 @@ import requests
 import time
 import json
 import psycopg2
+import os
 
 prohibitionContract = "0x47A91457a3a1f700097199Fd63c039c4784384aB"
-ALCHEMY_MAINNET_API_KEY = "2DTzGsHNcWmQi03oUKEsKtdQt7ON5p7A"
-ARBISCAN_API_KEY = "11P4BF36JQ73IG7GV69QM428U15AWMFRK1"
-DATABASETOKEN = "postgres://yezaufigplmbrj:daa40d1942c2a9bc98258d57d3c6835b989d25aae748cfb199526dca7da06a66@ec2-34-228-248-175.compute-1.amazonaws.com:5432/db6a6eqkldihes"
+ALCHEMY_MAINNET_API_KEY = os.environ.get('ALCHEMY_MAINNET_API_KEY')
+ARBISCAN_API_KEY = os.environ.get('ARBISCAN_API_KEY')
+DATABASETOKEN = os.environ.get('DATABASETOKEN')
 
 response = requests.get("https://api.arbiscan.io/api?module=contract&action=getabi&address=" + prohibitionContract + "&apikey=" + ARBISCAN_API_KEY)
 PROHIBITION_CONTRACT_ABI = json.loads(response.text)['result']
