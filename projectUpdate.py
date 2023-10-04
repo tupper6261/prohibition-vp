@@ -5,6 +5,8 @@ import json
 import psycopg2
 import os
 
+#testing
+
 prohibitionContract = "0x47A91457a3a1f700097199Fd63c039c4784384aB"
 ALCHEMY_MAINNET_API_KEY = os.environ.get('ALCHEMY_MAINNET_API_KEY')
 ARBISCAN_API_KEY = os.environ.get('ARBISCAN_API_KEY')
