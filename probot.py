@@ -352,7 +352,7 @@ async def discover(ctx):
     projectImage = project[8]
     projectURL = project[9]
 
-    embed = discord.Embed(title=f"{projectName} by {projectArtist}", description=f"**Price:** {projectPrice} ETH\n\n**Minted:** {projectInvocations} / {projectMaxInvocations}\n\n{projectURL}")
+    embed = discord.Embed(title=f"{projectName} by {projectArtist}", description=f"\n**Price:** {projectPrice} ETH\n**Minted:** {projectInvocations} / {projectMaxInvocations}\n\n{projectURL}")
     embed.set_image(url=projectImage)
 
     await ctx.respond(embed = embed)
