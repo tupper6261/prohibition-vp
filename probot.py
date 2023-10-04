@@ -13,6 +13,7 @@ import json
 import time
 import sys
 import base64
+import random
 
 load_dotenv()
 
@@ -332,6 +333,30 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
 #Slash command to discover a new active project
 @bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Discover an actively-minting project on the Prohibition platform")
 async def discover(ctx):
+    conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
+    cur = conn.cursor()
+    cur.execute("select * from prohibition_projects where is_active = true")
+    projects = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    project = random.randint(0,len(projects))
+    project = projects[project]
+    projectID = project[0]
+    projectInvocations = project[2]
+    projectMaxInvocations = project[3]
+    projectName =  project[4]
+    projectArtist = project[5]
+    projectMinterContract = project[6]
+    projectPrice = project[7]
+    projectImage = project[8]
+    projectURL = project[9]
+
+    embed = discord.Embed(title=f"{projectName} by {projectArtist}", description=f"**Price:** {projectPrice} ETH\n\n**Minted:** {projectInvocations} / {projectMaxInvocations}\n\n{projectURL}")
+    embed.set_image(url=projectImage)
+
+    await ctx.respond(embed = embed)
+
     return
 
 #Slash command to start a new artist verification vote
