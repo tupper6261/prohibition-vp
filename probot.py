@@ -512,12 +512,13 @@ async def updateCalendar():
             # Convert the compressed image to base64
             image_base64 = base64.b64encode(buffered.getvalue())
             image_size_kb = (len(image_base64) * 3 / 4) / 1024
-            while image_size_kb > 10240:
+            while image_size_kb > 10240 and compression > 0:
                 compression -= 10
                 image.save(buffered, format="PNG", optimize=True, quality=compression)  # You can adjust the quality as needed
                 # Convert the compressed image to base64
                 image_base64 = base64.b64encode(buffered.getvalue())
                 image_size_kb = (len(image_base64) * 3 / 4) / 1024
+                print (image_size_kb)
 
             projectName = event[0]['name']
             projectArtist = event[0]['artistName']
