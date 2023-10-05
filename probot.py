@@ -505,20 +505,22 @@ async def updateCalendar():
             image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + str(event[1] * 1000000) + ".png"
             response_image = requests.get(image_url)
             image = Image.open(BytesIO(response_image.content))
+            
             # Compress the image
             buffered = BytesIO()
             compression = 100
-            image.save(buffered, format="PNG", optimize=True, quality=compression)  # You can adjust the quality as needed
-            # Convert the compressed image to base64
+            image.save(buffered, format="JPEG", quality=compression)  # Use JPEG format
             image_base64 = base64.b64encode(buffered.getvalue())
             image_size_kb = (len(image_base64) * 3 / 4) / 1024
+            
             while image_size_kb > 10240 and compression > 0:
                 compression -= 10
-                image.save(buffered, format="PNG", optimize=True, quality=compression)  # You can adjust the quality as needed
-                # Convert the compressed image to base64
+                buffered.seek(0)  # Reset the buffer position
+                buffered.truncate()  # Clear the buffer content
+                image.save(buffered, format="JPEG", quality=compression)
                 image_base64 = base64.b64encode(buffered.getvalue())
                 image_size_kb = (len(image_base64) * 3 / 4) / 1024
-                print (image_size_kb)
+                print(image_size_kb)
 
             projectName = event[0]['name']
             projectArtist = event[0]['artistName']
