@@ -14,6 +14,8 @@ import time
 import sys
 import base64
 import random
+from PIL import Image
+from io import BytesIO
 
 load_dotenv()
 
@@ -501,7 +503,22 @@ async def updateCalendar():
 
         for event in events:
             image_url = "https://prohibition-arbitrum.s3.amazonaws.com/" + str(event[1] * 1000000) + ".png"
-            image_base64 = base64.b64encode(requests.get(image_url).content)
+            response_image = requests.get(image_url)
+            image = Image.open(BytesIO(response_image.content))
+            # Compress the image
+            buffered = BytesIO()
+            compression = 100
+            image.save(buffered, format="PNG", optimize=True, quality=compression)  # You can adjust the quality as needed
+            # Convert the compressed image to base64
+            image_base64 = base64.b64encode(buffered.getvalue())
+            image_size_kb = (len(image_base64) * 3 / 4) / 1024
+            while image_size_kb > 10240:
+                compression -= 10
+                image.save(buffered, format="PNG", optimize=True, quality=compression)  # You can adjust the quality as needed
+                # Convert the compressed image to base64
+                image_base64 = base64.b64encode(buffered.getvalue())
+                image_size_kb = (len(image_base64) * 3 / 4) / 1024
+
             projectName = event[0]['name']
             projectArtist = event[0]['artistName']
             projectDescription = event[0]['description']
