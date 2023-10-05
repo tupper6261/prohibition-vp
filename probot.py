@@ -517,6 +517,9 @@ async def updateCalendar():
                 compression -= 10
                 buffered.seek(0)  # Reset the buffer position
                 buffered.truncate()  # Clear the buffer content
+                #remove the alpha channel and save as jpeg to make the image smaller 
+                if image.mode == 'RGBA':
+                    image = image.convert("RGB")
                 image.save(buffered, format="JPEG", quality=compression)
                 image_base64 = base64.b64encode(buffered.getvalue())
                 image_size_kb = (len(image_base64) * 3 / 4) / 1024
