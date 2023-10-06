@@ -333,7 +333,8 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
     return message_content, is_vote_finished
 
 #Slash command to discover a new active project
-@bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Discover an actively-minting project on the Prohibition platform")
+#@bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Discover an actively-minting project on the Prohibition platform")
+@bot.slash_command(description="Discover an actively-minting project on the Prohibition platform")
 async def discover(ctx):
     conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
     cur = conn.cursor()
@@ -362,10 +363,11 @@ async def discover(ctx):
     return
 
 #Slash command to start a new artist verification vote
-@bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Start a new artist verification vote")
+#@bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Start a new artist verification vote")
+@bot.slash_command(description="Start a new artist verification vote")
 async def artistverificationvote(ctx, walletaddress: Option(str, "What is the applicant's wallet address?"), discordusername: Option(discord.Member, "What is the Discord account of the user applying for verification?")=None, xhandle: Option(str, "What is the X handle (without the @) of the user applying for verification?")=None, ighandle: Option(str, "What is the Instagram handle (without the @) of the user applying for verification?")=None, website: Option(str, "What is the applicant's website?")=None):
     guild = discord.utils.get(bot.guilds, id=PROHIBITION_GUILD_ID)
-    forum_channel = guild.get_channel(1154132908714496070)
+    forum_channel = guild.get_thread(1154132908714496070)
     bot_member = guild.me
     artist_prohibition_handle, artist_prohibition_profile = await getUser(walletaddress)
 
