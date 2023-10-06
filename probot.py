@@ -333,8 +333,8 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
     return message_content, is_vote_finished
 
 #Slash command to discover a new active project
-#@bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Discover an actively-minting project on the Prohibition platform")
-@bot.slash_command(description="Discover an actively-minting project on the Prohibition platform")
+@bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Discover an actively-minting project on the Prohibition platform")
+#@bot.slash_command(description="Discover an actively-minting project on the Prohibition platform")
 async def discover(ctx):
     conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
     cur = conn.cursor()
@@ -363,8 +363,8 @@ async def discover(ctx):
     return
 
 #Slash command to start a new artist verification vote
-#@bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Start a new artist verification vote")
-@bot.slash_command(description="Start a new artist verification vote")
+@bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Start a new artist verification vote")
+#@bot.slash_command(description="Start a new artist verification vote")
 async def artistverificationvote(ctx, walletaddress: Option(str, "What is the applicant's wallet address?"), discordusername: Option(discord.Member, "What is the Discord account of the user applying for verification?")=None, xhandle: Option(str, "What is the X handle (without the @) of the user applying for verification?")=None, ighandle: Option(str, "What is the Instagram handle (without the @) of the user applying for verification?")=None, website: Option(str, "What is the applicant's website?")=None):
     guild = discord.utils.get(bot.guilds, id=PROHIBITION_GUILD_ID)
     forum_channel = guild.get_channel(1154132908714496070)
@@ -409,8 +409,6 @@ async def artistverificationvote(ctx, walletaddress: Option(str, "What is the ap
         overwrites=overwrites
     )
 
-    #TODO - write voting message
-    #[display](url)
     message_title = artist_prohibition_handle + " Verification Vote"
     message_content = artist_prohibition_handle + " is applying to be a verified artist on the Prohibition platform. Please review their work, accounts, and wallet history below and submit your vote before the deadline.\n\n**Prohibition Profile:** " + artist_prohibition_profile
     message_content += "\n**Wallet Address: **" + walletaddress
@@ -434,8 +432,6 @@ async def artistverificationvote(ctx, walletaddress: Option(str, "What is the ap
     embed = discord.Embed(description=message_content)
 
     verification_acceptance_criteria_message = await channel.send(embed = embed)
-
-    #TODO - create vote status message
 
     message_content = "\n\n**Current Vote Status:**"
     message_content += "\n0 votes for"
