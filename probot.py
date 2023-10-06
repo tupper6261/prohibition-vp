@@ -367,7 +367,7 @@ async def discover(ctx):
 @bot.slash_command(description="Start a new artist verification vote")
 async def artistverificationvote(ctx, walletaddress: Option(str, "What is the applicant's wallet address?"), discordusername: Option(discord.Member, "What is the Discord account of the user applying for verification?")=None, xhandle: Option(str, "What is the X handle (without the @) of the user applying for verification?")=None, ighandle: Option(str, "What is the Instagram handle (without the @) of the user applying for verification?")=None, website: Option(str, "What is the applicant's website?")=None):
     guild = discord.utils.get(bot.guilds, id=PROHIBITION_GUILD_ID)
-    forum_channel = guild.get_thread(1154132908714496070)
+    forum_channel = guild.get_channel(1154132908714496070)
     bot_member = guild.me
     artist_prohibition_handle, artist_prohibition_profile = await getUser(walletaddress)
 
@@ -378,11 +378,14 @@ async def artistverificationvote(ctx, walletaddress: Option(str, "What is the ap
     # Get today's date in the format dateMonthYear
     todays_date = datetime.now().strftime('%d%b%Y')
 
+    '''
+
     #Create discussion forum thread
     discussion_forum_name = artist_prohibition_handle + " verification discussion"
     discussion_forum_content = "Feel free to discuss the details of " + artist_prohibition_handle + "'s verification request"
 
     await forum_channel.create_thread(name = discussion_forum_name, content = discussion_forum_content)
+    '''
 
     channel_name = "vote-" + artist_prohibition_handle + "-" + todays_date
 
