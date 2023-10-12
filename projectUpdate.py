@@ -32,6 +32,7 @@ cur = conn.cursor()
 
 #Go through all the existing projects
 for projectID in range(0,nextProjectId):
+    print (projectID)
     #Grab some pertinent info from the projectStateData function
     result = contract.functions.projectStateData(projectID).call()
     #Extract the returned values
