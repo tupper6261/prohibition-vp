@@ -472,7 +472,7 @@ async def discover(ctx, active: discord.Option(str, "Show a random iteration of 
     invocation = random.randint(0,projectInvocations)
     tokenID = projectID * 1000000 + invocation
     invocationURL = projectURL + "/token/" + str(invocation)
-    invocationImage = "https://generator.arbitrum.artblocks.io/0x47a91457a3a1f700097199fd63c039c4784384ab/" + str(tokenID)
+    invocationImage = "https://prohibition-arbitrum.s3.amazonaws.com/" + str(tokenID) + ".png"
     print (invocationImage)
 
     #[Display](URL)
