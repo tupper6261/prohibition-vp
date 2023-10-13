@@ -473,6 +473,7 @@ async def discover(ctx, active: discord.Option(str, "Show a random iteration of 
     tokenID = projectID * 1000000 + invocation
     invocationURL = projectURL + "/token/" + str(invocation)
     invocationImage = "https://generator.arbitrum.artblocks.io/0x47a91457a3a1f700097199fd63c039c4784384ab/" + str(tokenID)
+    print (invocationImage)
 
     #[Display](URL)
     embed = discord.Embed(title=f"{projectName} by {projectArtist}", description=f"\n**Project Price:** {projectPrice} ETH\n**Minted:** {projectInvocations} / {projectMaxInvocations}\n\n[Invocation #{str(invocation)}]({invocationURL})")
