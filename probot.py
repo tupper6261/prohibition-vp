@@ -446,7 +446,7 @@ async def project(ctx):
 
 #Slash command to discover a prohibition project
 @bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Discover a new project on the Prohibition platform")
-async def discover(ctx, active: discord.OptionChoice(str, "Show a random iteration of an actively-minting project, or from any project?", choices = ["Only Active Projects", "Any Project"]) = "Any Project"):
+async def discover(ctx, active: discord.Option(str, "Show a random iteration of an actively-minting project, or from any project?", choices = ["Only Active Projects", "Any Project"]) = "Any Project"):
     conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
     cur = conn.cursor()
     if active == "Only Active Projects":
