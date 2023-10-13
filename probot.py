@@ -431,13 +431,21 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
     
     return message_content, is_vote_finished
 
-#Slash command to discover a new active project
-@bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Discover an actively-minting project on the Prohibition platform")
-#@bot.slash_command(description="Discover an actively-minting project on the Prohibition platform")
-async def discover(ctx):
+#Slash command to display an iteration from a specified project
+@bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Display an iteration of a minted project")
+async def project(ctx):
+    await ctx.respond("This command isn't ready yet!", ephemeral = True)
+    return
+
+#Slash command to discover a prohibition project
+@bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Discover a new project on the Prohibition platform")
+async def discover(ctx, active: discord.OptionChoice(["Only Active Projects", "Any Project"], "Show a random iteration of an actively-minting project, or from any project?") = "Any Project"):
     conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
     cur = conn.cursor()
-    cur.execute("select * from prohibition_projects where is_active = true")
+    if active == "Only Active Projects":
+        cur.execute("select * from prohibition_projects where is_active = true")
+    else:
+        cur.execute("select * from prohibition_projects")
     projects = cur.fetchall()
     cur.close()
     conn.close()
@@ -454,8 +462,14 @@ async def discover(ctx):
     projectImage = project[8]
     projectURL = project[9]
 
-    embed = discord.Embed(title=f"{projectName} by {projectArtist}", description=f"\n**Price:** {projectPrice} ETH\n**Minted:** {projectInvocations} / {projectMaxInvocations}\n\n{projectURL}")
-    embed.set_image(url=projectImage)
+    invocation = random.randint(0,projectInvocations)
+    tokenID = projectID * 1000000 + invocation
+    invocationURL = projectURL + "/token/" + str(invocation)
+    invocationImage = "https://generator.arbitrum.artblocks.io/0x47a91457a3a1f700097199fd63c039c4784384ab/" + str(tokenID)
+
+    #[Display](URL)
+    embed = discord.Embed(title=f"{projectName} by {projectArtist}", description=f"\n**Project Price:** {projectPrice} ETH\n**Minted:** {projectInvocations} / {projectMaxInvocations}\n\n[Invocation #{str(invocation)}]({invocationURL})")
+    embed.set_image(url=invocationImage)
 
     await ctx.respond(embed = embed)
 
@@ -463,7 +477,6 @@ async def discover(ctx):
 
 #Slash command to start a new artist verification vote
 @bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Start a new artist verification vote")
-#@bot.slash_command(description="Start a new artist verification vote")
 async def artistverificationvote(ctx, walletaddress: Option(str, "What is the applicant's wallet address?"), discordusername: Option(discord.Member, "What is the Discord account of the user applying for verification?")=None, xhandle: Option(str, "What is the X handle (without the @) of the user applying for verification?")=None, ighandle: Option(str, "What is the Instagram handle (without the @) of the user applying for verification?")=None, website: Option(str, "What is the applicant's website?")=None):
     guild = discord.utils.get(bot.guilds, id=PROHIBITION_GUILD_ID)
     forum_channel = guild.get_channel(1154132908714496070)
