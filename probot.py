@@ -62,7 +62,7 @@ DELETE_LINKS = False
 UPDATE_LOOP = True
 
 response = requests.get("https://api.arbiscan.io/api?module=contract&action=getabi&address=" + prohibitionContract + "&apikey=" + ARBISCAN_API_KEY)
-PROHIBITION_CONTRACT_ABI = response.text
+PROHIBITION_CONTRACT_ABI = json.loads(response.text)['result']
 
 PROHIBITION_PROJECT_NAMES = ["testing1", "testing2"]
 PROHIBITION_ARTISTS = []
