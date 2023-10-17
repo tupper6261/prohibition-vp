@@ -61,8 +61,12 @@ DELETE_LINKS = False
 
 UPDATE_LOOP = True
 
-response = requests.get("https://api.arbiscan.io/api?module=contract&action=getabi&address=" + prohibitionContract + "&format=raw")
+response = requests.get(requests.get("https://api.arbiscan.io/api?module=contract&action=getabi&address=" + prohibitionContract + "&apikey=" + ARBISCAN_API_KEY))
 PROHIBITION_CONTRACT_ABI = response.text
+
+PROHIBITION_PROJECT_NAMES = ["testing1", "testing2"]
+PROHIBITION_ARTISTS = []
+
 
 # Set up the bot with the proper intents to read message content and reactions
 intents = discord.Intents.default()
@@ -210,8 +214,9 @@ async def updateRoles():
 async def updateProjects():
     try:
         #Get the prohibition contract ABI
-        response = requests.get("https://api.arbiscan.io/api?module=contract&action=getabi&address=" + prohibitionContract + "&apikey=" + ARBISCAN_API_KEY)
-        PROHIBITION_CONTRACT_ABI = json.loads(response.text)['result']
+        global PROHIBITION_CONTRACT_ABI
+        global PROHIBITION_ARTISTS
+        global PROHIBITION_PROJECT_NAMES
 
         #Connect to alchemy
         w3 = Web3(HTTPProvider('https://arb-mainnet.g.alchemy.com/v2/'+ALCHEMY_MAINNET_API_KEY))
@@ -225,6 +230,9 @@ async def updateProjects():
         #Connect to Postgres
         conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
         cur = conn.cursor()
+
+        PROHIBITION_ARTISTS = []
+        PROHIBITION_PROJECT_NAMES = []
 
         #Go through all the existing projects
         for projectID in range(0,nextProjectId):
@@ -301,6 +309,9 @@ async def updateProjects():
                         project_url = EXCLUDED.project_url;
                 """, (projectID, stillMinting, invocations, maxInvocations, projectName, artist, projectMinterContractAddress, readableTokenPrice, projectImage, projectURL))
                 conn.commit()
+
+                PROHIBITION_PROJECT_NAMES.append(projectName)
+                PROHIBITION_ARTISTS.append(artist)
                 
         cur.close()
         conn.commit()
@@ -440,8 +451,8 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
 
 #Slash command to display an iteration from a specified project
 @bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Display an iteration of a minted project")
-async def project(ctx):
-    await ctx.respond("This command isn't ready yet!", ephemeral = True)
+async def project(ctx, projectname: discord.Option(str, autocomplete = discord.utils.basic_autocomplete(PROHIBITION_PROJECT_NAMES))):
+    await ctx.respond("This command isn't ready yet!\n\nBut you're working with " + projectname, ephemeral = True)
     return
 
 #Slash command to discover a prohibition project
