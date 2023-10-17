@@ -64,9 +64,19 @@ UPDATE_LOOP = True
 response = requests.get("https://api.arbiscan.io/api?module=contract&action=getabi&address=" + prohibitionContract + "&apikey=" + ARBISCAN_API_KEY)
 PROHIBITION_CONTRACT_ABI = json.loads(response.text)['result']
 
-PROHIBITION_PROJECT_NAMES = ["testing1", "testing2"]
+PROHIBITION_PROJECT_NAMES = []
 PROHIBITION_ARTISTS = []
 
+conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
+cur = conn.cursor()
+cur.execute("SELECT * FROM prohibition_projects")
+results = cur.fetchall()
+cur.close()
+conn.close()
+
+for i in results:
+    PROHIBITION_PROJECT_NAMES.append(i[4])
+    PROHIBITION_ARTISTS.append(i[5])
 
 # Set up the bot with the proper intents to read message content and reactions
 intents = discord.Intents.default()
