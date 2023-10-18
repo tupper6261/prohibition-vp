@@ -502,8 +502,9 @@ async def project(ctx, projectname: discord.Option(str, autocomplete = discord.u
 
     return
 
-async def artist_autocomplete(interaction: discord.Interaction, value: str):
-    return [discord.SelectOption(label=artist, value=artist) for artist in PROHIBITION_ARTISTS if artist.lower().startswith(value.lower())]
+async def artist_autocomplete(interaction: discord.Interaction, value: discord.AutocompleteContext):
+    user_input = value.value  # Get the user's input from the AutocompleteContext object
+    return [discord.SelectOption(label=artist, value=artist) for artist in PROHIBITION_ARTISTS if artist.lower().startswith(user_input.lower())]
 
 @bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Display an invocation of a minted project by a specified artist")
 async def artist(ctx, artistname: discord.Option(str, autocomplete=artist_autocomplete)):
