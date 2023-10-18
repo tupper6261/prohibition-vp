@@ -75,9 +75,15 @@ cur.close()
 conn.close()
 
 for i in results:
-    PROHIBITION_PROJECT_NAMES.append(i[4])
-    if i[5] not in PROHIBITION_ARTISTS:
-        PROHIBITION_ARTISTS.append(i[5])
+    project_name = i[4]
+    artist_name = i[5]
+    if len(project_name) > 100:
+        project_name = project_name[:96] + "..."
+    if len(artist_name) > 100:
+        artist_name = artist_name[:96] + "..."
+    PROHIBITION_PROJECT_NAMES.append(project_name)
+    if artist_name not in PROHIBITION_ARTISTS:
+        PROHIBITION_ARTISTS.append(artist_name)
 
 # Set up the bot with the proper intents to read message content and reactions
 intents = discord.Intents.default()
