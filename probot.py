@@ -69,11 +69,12 @@ PROHIBITION_ARTISTS = []
 
 conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
 cur = conn.cursor()
-cur.execute("SELECT * FROM prohibition_projects")
+cur.execute("SELECT * FROM prohibition_projects ORDER BY project_artist ASC")
 results = cur.fetchall()
 cur.close()
 conn.close()
 
+num = 0
 for i in results:
     project_name = i[4]
     artist_name = i[5]
@@ -83,7 +84,9 @@ for i in results:
         artist_name = artist_name[:96] + "..."
     PROHIBITION_PROJECT_NAMES.append(project_name)
     if artist_name not in PROHIBITION_ARTISTS:
-        PROHIBITION_ARTISTS.append(artist_name)
+        if num < 50:
+            PROHIBITION_ARTISTS.append(artist_name)
+    num += 1
 
 # Set up the bot with the proper intents to read message content and reactions
 intents = discord.Intents.default()
@@ -503,7 +506,7 @@ async def project(ctx, projectname: discord.Option(str, autocomplete = discord.u
     return
 
 @bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Display an invocation of a minted project by a specified artist")
-async def artist(ctx, artistname: discord.Option(str, autocomplete = discord.utils.basic_autocomplete(PROHIBITION_PROJECT_NAMES))):
+async def artist(ctx, artistname: discord.Option(str, autocomplete = discord.utils.basic_autocomplete(PROHIBITION_ARTISTS))):
     conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
     cur = conn.cursor()
     cur.execute("select * from prohibition_projects where project_artist = '{}'".format(artistname))
@@ -584,6 +587,11 @@ async def artistverificationvote(ctx, walletaddress: Option(str, "What is the ap
     bot_member = guild.me
     artist_prohibition_handle, artist_prohibition_profile = await getUser(walletaddress)
 
+    # Define the roles
+    default_role = guild.default_role
+    verified_role = discord.utils.get(guild.roles, id=VERIFIED_ROLE_ID)
+    prohibition_team_role = discord.utils.get(guild.roles, id=PROHIBITION_TEAM_ROLE_ID)
+
     vote_begin = int(time.time())
     earliest_vote_end = vote_begin + VERIFICATION_MINIMUM_VOTE_DURATION
     latest_vote_end = vote_begin + VERIFICATION_MAXIMUM_VOTE_DURATION
@@ -601,11 +609,6 @@ async def artistverificationvote(ctx, walletaddress: Option(str, "What is the ap
     '''
 
     channel_name = "vote-" + artist_prohibition_handle + "-" + todays_date
-
-    # Define the roles
-    default_role = guild.default_role
-    verified_role = discord.utils.get(guild.roles, id=VERIFIED_ROLE_ID)
-    prohibition_team_role = discord.utils.get(guild.roles, id=PROHIBITION_TEAM_ROLE_ID)
 
     # Set the overwrites
     overwrites = {
