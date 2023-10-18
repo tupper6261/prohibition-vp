@@ -502,7 +502,7 @@ async def project(ctx, projectname: discord.Option(str, autocomplete = discord.u
 
     return
 
-artist_choices = [(artist, artist) for artist in PROHIBITION_ARTISTS]
+artist_choices = [{'name': artist, 'value': artist} for artist in PROHIBITION_ARTISTS]
 
 #Slash command to display an invocation from a specified artist
 @bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Display an invocation of a minted project by a specified artist")
