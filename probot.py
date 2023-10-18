@@ -76,14 +76,15 @@ conn.close()
 
 for i in results:
     PROHIBITION_PROJECT_NAMES.append(i[4])
-    PROHIBITION_ARTISTS.append(i[5])
+    if i[5] not in PROHIBITION_ARTISTS:
+        PROHIBITION_ARTISTS.append(i[5])
 
 # Set up the bot with the proper intents to read message content and reactions
 intents = discord.Intents.default()
 intents.message_content = True
 intents.reactions = True
 intents.members = True
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="+", intents=intents)
 
 class MyView(discord.ui.View):  # Create a class called MyView that subclasses discord.ui.View
     def __init__(self):
@@ -459,10 +460,78 @@ async def updateVoteMessage(vote_id, number_of_verified_artists):
     
     return message_content, is_vote_finished
 
-#Slash command to display an iteration from a specified project
-@bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Display an iteration of a minted project")
-async def project(ctx, projectname: discord.Option(str, autocomplete = discord.utils.basic_autocomplete(PROHIBITION_PROJECT_NAMES))):
-    await ctx.respond("This command isn't ready yet!\n\nBut you're working with " + projectname, ephemeral = True)
+#Slash command to display an invocation from a specified project
+@bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Display an invocation of a minted project")
+async def project(ctx, projectname: discord.Option(str, autocomplete = discord.utils.basic_autocomplete(PROHIBITION_PROJECT_NAMES)), invocation: discord.Option(int) = 0):
+    conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
+    cur = conn.cursor()
+    cur.execute("select * from prohibition_projects where project_name = '{}'".format(projectname))
+    projects = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    if projects == []:
+        await ctx.respond("I can't find a project titled {}!".format(projectname), ephemeral = True)
+        return
+
+    project = projects[0]
+    projectID = project[0]
+    projectInvocations = project[2]
+    projectMaxInvocations = project[3]
+    projectName =  project[4]
+    projectArtist = project[5]
+    projectMinterContract = project[6]
+    projectPrice = project[7]
+    projectImage = project[8]
+    projectURL = project[9]
+
+    tokenID = projectID * 1000000 + invocation
+    invocationURL = projectURL + "/token/" + str(invocation)
+    invocationImage = "https://prohibition-arbitrum.s3.amazonaws.com/" + str(tokenID) + ".png"
+
+    embed = discord.Embed(title=f"{projectName} by {projectArtist}", description=f"\n**Project Price:** {projectPrice} ETH\n**Minted:** {projectInvocations} / {projectMaxInvocations}\n\n[Invocation #{str(invocation)}]({invocationURL})")
+    embed.set_image(url=invocationImage)
+
+    await ctx.respond(embed = embed)
+
+    return
+
+#Slash command to display an invocation from a specified artist
+@bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Display an invocation of a minted project by a specified artist")
+async def project(ctx, artistname: discord.Option(str, autocomplete = discord.utils.basic_autocomplete(PROHIBITION_ARTISTS))):
+    conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
+    cur = conn.cursor()
+    cur.execute("select * from prohibition_projects where project_artist = '{}'".format(artistname))
+    projects = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    if projects == []:
+        await ctx.respond("I can't find an artist named {}!".format(artistname), ephemeral = True)
+        return
+
+    project = random.randint(0,len(projects))
+    project = projects[project]
+    projectID = project[0]
+    projectInvocations = project[2]
+    projectMaxInvocations = project[3]
+    projectName =  project[4]
+    projectArtist = project[5]
+    projectMinterContract = project[6]
+    projectPrice = project[7]
+    projectImage = project[8]
+    projectURL = project[9]
+
+    invocation = random.randint(0,projectInvocations)
+    tokenID = projectID * 1000000 + invocation
+    invocationURL = projectURL + "/token/" + str(invocation)
+    invocationImage = "https://prohibition-arbitrum.s3.amazonaws.com/" + str(tokenID) + ".png"
+
+    embed = discord.Embed(title=f"{projectName} by {projectArtist}", description=f"\n**Project Price:** {projectPrice} ETH\n**Minted:** {projectInvocations} / {projectMaxInvocations}\n\n[Invocation #{str(invocation)}]({invocationURL})")
+    embed.set_image(url=invocationImage)
+
+    await ctx.respond(embed = embed)
+
     return
 
 #Slash command to discover a prohibition project
@@ -494,9 +563,7 @@ async def discover(ctx, active: discord.Option(str, "Show a random iteration of 
     tokenID = projectID * 1000000 + invocation
     invocationURL = projectURL + "/token/" + str(invocation)
     invocationImage = "https://prohibition-arbitrum.s3.amazonaws.com/" + str(tokenID) + ".png"
-    print (invocationImage)
 
-    #[Display](URL)
     embed = discord.Embed(title=f"{projectName} by {projectArtist}", description=f"\n**Project Price:** {projectPrice} ETH\n**Minted:** {projectInvocations} / {projectMaxInvocations}\n\n[Invocation #{str(invocation)}]({invocationURL})")
     embed.set_image(url=invocationImage)
 
