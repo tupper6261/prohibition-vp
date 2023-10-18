@@ -84,6 +84,7 @@ for i in results:
     PROHIBITION_PROJECT_NAMES.append(project_name)
     if artist_name not in PROHIBITION_ARTISTS:
         PROHIBITION_ARTISTS.append(artist_name)
+        print (artist_name)
 
 # Set up the bot with the proper intents to read message content and reactions
 intents = discord.Intents.default()
