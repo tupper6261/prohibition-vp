@@ -84,7 +84,7 @@ for i in results:
         artist_name = artist_name[:96] + "..."
     PROHIBITION_PROJECT_NAMES.append(project_name)
     if artist_name not in PROHIBITION_ARTISTS:
-        if num > 50:
+        if num > 25 and num < 50:
             PROHIBITION_ARTISTS.append(artist_name)
     num += 1
 
@@ -519,6 +519,8 @@ async def artist(ctx, artistname: discord.Option(str, autocomplete = discord.uti
         return
 
     project = random.randint(0,len(projects))
+    print (len(projects))
+    print (project)
     project = projects[project]
     projectID = project[0]
     projectInvocations = project[2]
