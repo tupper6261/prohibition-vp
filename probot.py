@@ -502,11 +502,11 @@ async def project(ctx, projectname: discord.Option(str, autocomplete = discord.u
 
     return
 
-artist_choices = [{'name': artist, 'value': artist} for artist in PROHIBITION_ARTISTS]
+async def artist_autocomplete(interaction: discord.Interaction, value: str):
+    return [discord.SelectOption(label=artist, value=artist) for artist in PROHIBITION_ARTISTS if artist.lower().startswith(value.lower())]
 
-#Slash command to display an invocation from a specified artist
 @bot.slash_command(guild_ids=[PROHIBITION_GUILD_ID], description="Display an invocation of a minted project by a specified artist")
-async def artist(ctx, artistname: discord.Option(str, choices=artist_choices)):
+async def artist(ctx, artistname: discord.Option(str, autocomplete=artist_autocomplete)):
 #async def artist(ctx, artistname: discord.Option(str, autocomplete = discord.utils.basic_autocomplete(PROHIBITION_ARTISTS))):
     conn = psycopg2.connect(DATABASE_TOKEN, sslmode='require')
     cur = conn.cursor()
