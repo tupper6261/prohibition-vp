@@ -83,10 +83,8 @@ for i in results:
     if len(artist_name) > 100:
         artist_name = artist_name[:96] + "..."
     PROHIBITION_PROJECT_NAMES.append(project_name)
-    if artist_name not in PROHIBITION_ARTISTS:
-        if num < 2:
-            print (artist_name)
-            PROHIBITION_ARTISTS.append(artist_name)
+    if artist_name not in PROHIBITION_ARTISTS and artist_name != '':
+        PROHIBITION_ARTISTS.append(artist_name)
     num += 1
 
 # Set up the bot with the proper intents to read message content and reactions
