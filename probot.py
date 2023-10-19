@@ -84,7 +84,7 @@ for i in results:
         artist_name = artist_name[:96] + "..."
     PROHIBITION_PROJECT_NAMES.append(project_name)
     if artist_name not in PROHIBITION_ARTISTS:
-        if num > 6 and num < 51:
+        if num > 3 and num < 7:
             PROHIBITION_ARTISTS.append(artist_name)
     num += 1
 
