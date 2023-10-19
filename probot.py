@@ -518,8 +518,6 @@ async def artist(ctx, artistname: discord.Option(str, autocomplete = discord.uti
         return
 
     project = random.randint(0,len(projects))
-    print (len(projects))
-    print (project)
     project = projects[project]
     projectID = project[0]
     projectInvocations = project[2]
@@ -592,6 +590,10 @@ async def artistverificationvote(ctx, walletaddress: Option(str, "What is the ap
     default_role = guild.default_role
     verified_role = discord.utils.get(guild.roles, id=VERIFIED_ROLE_ID)
     prohibition_team_role = discord.utils.get(guild.roles, id=PROHIBITION_TEAM_ROLE_ID)
+
+    if prohibition_team_role not in ctx.author.roles:
+        await ctx.respond("Only a Prohibition team member can start an artist verification vote!", ephemeral = True)
+        return
 
     vote_begin = int(time.time())
     earliest_vote_end = vote_begin + VERIFICATION_MINIMUM_VOTE_DURATION
