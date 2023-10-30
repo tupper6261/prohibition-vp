@@ -750,8 +750,7 @@ async def updateCalendar():
                 image.save(buffered, format="JPEG", quality=compression)
                 image_base64 = base64.b64encode(buffered.getvalue())
                 image_size_kb = (len(image_base64) * 3 / 4) / 1024
-                print(image_size_kb)
-
+                
             projectName = event[0]['name']
             projectArtist = event[0]['artistName']
             projectDescription = event[0]['description']
